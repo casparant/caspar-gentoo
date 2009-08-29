@@ -1,0 +1,13 @@
+--- Makefile	2009-06-16 00:49:44.437891731 +0800
++++ Makefile	2009-06-16 01:07:46.609914104 +0800
+@@ -12,8 +12,8 @@
+ APP_ICONS=$(PREFIX)/share/icons/hicolor
+ APP_LINK=$(PREFIX)/share/applications
+ 
+-QMAKE=qmake-qt4
+-LRELEASE=lrelease-qt4
++QMAKE=qmake
++LRELEASE=lrelease
+ 
+ DEFS=DATA_PATH=\\\"$(DATA_PATH)\\\" \
+ 	 TRANSLATION_PATH=\\\"$(TRANSLATION_PATH)\\\" \
