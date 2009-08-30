@@ -96,7 +96,7 @@ src_prepare() {
 	epatch "${FILESDIR}/${PN}-2.26.0-gcc44-options.patch"
 	
 	# Notification OSD
-	epatch "${FILESDIR}/{PN}-2.26.4-gpm-notify-osd.patch"
+	epatch "${FILESDIR}/${PN}-2.26.4-gpm-notify-osd.patch"
 
 	# Resurrect cpufreq in capplet, bug #263891
 	epatch "${WORKDIR}/${PN}-2.26.0-cpufreq-libhal-glib.patch"
