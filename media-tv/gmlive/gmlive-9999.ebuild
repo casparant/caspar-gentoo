@@ -35,6 +35,8 @@ src_prepare() {
 	sed -i \
 		-e 's:channel.sopcast.com:channel.sopcast.cn:' \
 		src/MainWindow.cpp || die "sed failed"
+	sed -i \
+		'55s/int on/on/' src/main.cpp || die "sed failed"
 }
 
 src_configure() {
