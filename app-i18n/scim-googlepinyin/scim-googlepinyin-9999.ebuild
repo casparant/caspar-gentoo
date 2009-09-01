@@ -23,8 +23,11 @@ src_configure(){
 	econf || die "configure failed"
 }
 
+src_compile() {
+	emake || die "make failed"
+}
+
 src_install(){
-	emake INSTALL_ROOT="${D}" || die "make failed"
-	emake INSTALL_ROOT="${D}" install || die "install faled"
+	emake DESTDIR="${D}" install || die "install faled"
 }
 
