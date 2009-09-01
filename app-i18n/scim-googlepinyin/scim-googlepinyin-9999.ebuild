@@ -15,19 +15,18 @@ SLOT="0"
 KEYWORDS="~x86"
 IUSE=""
 
+# FIXME:
 DEPEND=">=app-i18n/scim-1.4"
-RDEPEND="${DEPEND}"
+RDEPEND="${DEPEND}
+		sys-devel/gettext
+		dev-util/pkgconfig"
 
-src_configure(){
+src_prepare(){
 	./autogen.sh
-	econf || die "configure failed"
-}
-
-src_compile() {
-	emake || die "make failed"
 }
 
 src_install(){
 	emake DESTDIR="${D}" install || die "install faled"
+	dodoc README* ChangeLog AUTHORS NEWS TODO || die "dodoc failed"
 }
 
