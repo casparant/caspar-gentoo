@@ -1,0 +1,34 @@
+#!/sbin/runscript
+# Copyright 1999-2009 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+pidfile=${pidfile:-/var/run/gcaldaemon.pid}
+
+depend() {
+    need net
+}
+
+start() {
+    ebegin "Starting GCALDaemon"
+    start-stop-daemon --start --quiet --background \
+        -exec /opt/gcaldaemon/bin/standalone-start.sh
+    status=$?
+    if [ $status -eq 0 ]; then
+        cpid=`ps aux | grep -i "java" | grep -i "gcaldaemon" | awk '{print ""$2""}'`
+        echo ${cpid} > ${pidfile}
+    fi
+    eend ${status}
+}
+
+stop() {
+    ebegin "Stopping GCALDaemon"
+    start-stop-daemon --stop --quiet \
+        --pidfile ${pidfile}
+    eend $?
+}
+
+restart() {
+    stop
+    start
+}

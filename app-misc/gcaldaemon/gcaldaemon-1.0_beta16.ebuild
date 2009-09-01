@@ -16,13 +16,20 @@ DEPEND="${RDEPEND}"
 
 src_install() {
 	cd GCALDaemon
-	local dirs="bin conf lang lib log work"
 	sed -i "s|^GCALDIR=.*$|GCALDIR=/opt/${PN}|g" bin/password-encoder.sh
 	sed -i "s|^GCALDIR=.*$|GCALDIR=/opt/${PN}|g" bin/standalone-start.sh
 	sed -i "s|^GCALDIR=.*$|GCALDIR=/opt/${PN}|g" bin/sync-now.sh
-	chmod +x bin/*.sh
+	into /opt/${PN}
+	dobin bin/*.sh || die "failed to install bin files"
+
+	local dirs="conf lang lib log work"
 	insinto /opt/${PN}
 	doins -r $dirs || die "failed to install"
+	
+	insinto /etc/init.d/
+	insopts -m0755
+	doins ${FILESDIR}/${PN} || die "failed to install init.d file"
+	
 	if use doc; then
 		dohtml -r docs/* || die "failed to install docs"
 	fi
@@ -30,8 +37,6 @@ src_install() {
 
 pkg_postinst() {
 	ewarn 
-	ewarn "Please run /opt/${PN}/bin/config-editor.sh before you launch the"
-	ewarn "server."
-	ewarn "You maybe want to add /opt/${PN}/bin/standalone-start.sh into your"
-	ewarn "self-boot menu."
+	ewarn "Please run /opt/${PN}/bin/config-editor.sh as root before "
+	ewarn "you launch the server."
 }
