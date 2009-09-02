@@ -12,21 +12,21 @@ EGIT_REPO_URI="git://github.com/tchaikov/${PN}.git"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS="~x86"
+KEYWORDS="~amd64 ~x86"
 IUSE=""
 
-# FIXME:
-DEPEND=">=app-i18n/scim-1.4"
-RDEPEND="${DEPEND}
-		sys-devel/gettext
-		dev-util/pkgconfig"
+RDEPEND="
+	|| ( >=app-i18n/scim-1.1 >=app-i18n/scim-cvs-1.1 )"
+DEPEND="${RDEPEND}
+	dev-util/pkgconfig
+	sys-devel/gettext"
 
 src_prepare(){
-	./autogen.sh
+	./autogen.sh || die "autogen.sh failed with err_code $?"
 }
 
 src_install(){
-	emake DESTDIR="${D}" install || die "install faled"
+	emake DESTDIR="${D}" install || die "install failed"
 	dodoc README* ChangeLog AUTHORS NEWS TODO || die "dodoc failed"
 }
 

@@ -15,7 +15,7 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="sopcast totem"
+IUSE="nslive sopcast totem"
 
 RDEPEND="dev-libs/libxml2
 	>=dev-cpp/libglademm-2.4
@@ -28,6 +28,7 @@ DEPEND="${RDEPEND}
 	>=dev-util/intltool-0.35"
 RDEPEND="${RDEPEND}
 	sopcast? ( media-tv/sopcast )
+	nslive? ( media-tv/nslive )
 	media-plugins/gst-plugins-libmms
 	media-video/mplayer"
 

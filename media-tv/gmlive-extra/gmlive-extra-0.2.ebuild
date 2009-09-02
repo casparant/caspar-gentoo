@@ -35,7 +35,7 @@ src_install() {
 		# I have to set suid for this bin file.
 		# do this, and take your own risk!
 		dobin xpps
-		chmod u+s xpps
+		chmod u+s /usr/bin/xpps
 		dolib lib/lib*
 	fi
 }
