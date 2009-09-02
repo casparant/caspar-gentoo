@@ -15,7 +15,7 @@ EAPI=0
 DESCRIPTION="daemon that displays passive pop-up notifications"
 HOMEPAGE="https://launchpad.net/notify-osd"
 
-SRC_URI="http://launchpad.net/notify-osd/0.9/${PV}/+download/${P}.tar.gz"
+SRC_URI="http://launchpad.net/${PN}/0.9/${PV}/+download/${P}.tar.gz"
 LICENSE="GPL-3"
 SLOT="0"
 
