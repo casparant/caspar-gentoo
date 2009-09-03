@@ -11,12 +11,12 @@ depend() {
 
 start() {
     ebegin "Starting GCALDaemon"
-    start-stop-daemon --start --quiet --background \
+    start-stop-daemon --start --quiet \
         -exec /opt/gcaldaemon/bin/standalone-start.sh
     status=$?
-    if [ $status -eq 0 ]; then
-        cpid=`ps aux | grep -i "java" | grep -i "gcaldaemon" | awk '{print ""$2""}'`
-        echo ${cpid} > ${pidfile}
+    if [ ${status} -eq 0 ]; then
+        echo `ps -ef | grep -i "gcaldaemon" | \
+            grep -i "java" | awk '{ print $2 }'` > ${pidfile}
     fi
     eend ${status}
 }
