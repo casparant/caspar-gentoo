@@ -22,12 +22,12 @@ RDEPEND="${DEPEND}"
 
 S=${WORKDIR}/${MY_P}
 
-src_compile() {
+src_configure() {
 	sed -i 's/\/usr\/local/\/usr/' qwit.pro
 	eqmake4
-	emake || die "make failed"
 }
 
 src_install() {
 	emake INSTALL_ROOT="${D}" install || die "install failed"
+	dodoc AUTHORS COPYING README
 }
