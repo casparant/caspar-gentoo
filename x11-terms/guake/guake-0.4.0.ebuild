@@ -2,6 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
+EAPI="2"
+
 inherit gnome2
 
 DESCRIPTION="Guake is a drop-down terminal for Gnome"
@@ -16,15 +18,13 @@ IUSE=""
 DEPEND=">=dev-lang/python-2.4
 	dev-python/gnome-python
 	dev-python/notify-python
-	x11-libs/vte"
+	x11-libs/vte[python]"
+
+src_configure() {
+	econf || die "configuration failed"
+}
 
 src_compile() {
-	if ! built_with_use x11-libs/vte python ; 
-	then
-		eerror "This package requires x11-libs/vte with compiled with python support."
-		die "Please reemerge x11-libs/vte with USE=\"python\"."
-	fi
-	econf || die "configuration failed"
 	emake || die "make failed"
 }
 
