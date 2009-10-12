@@ -62,9 +62,8 @@ src_unpack() {
 
 	#Ubuntu patch
 	epatch "${FILESDIR}"/${PN}-ubuntu-01_backwards_compat.patch
-	epatch "${FILESDIR}"/${PN}-ubuntu-02_bdflib_large_encodings.patch
-	epatch "${FILESDIR}"/${PN}-ubuntu-03_hmtx_no_shorts.patch
-	epatch "${FILESDIR}"/${PN}-ubuntu-04_proper_armel_asm_declaration.patch
+	epatch "${FILESDIR}"/${PN}-ubuntu-02_hmtx_no_shorts.patch
+
 	epatch "${FILESDIR}"/${PN}-2.3.2-enable-valid.patch
 
 	if use utils; then

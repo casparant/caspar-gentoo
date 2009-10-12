@@ -1,6 +1,6 @@
-diff -Naur freetype-2.3.9-ubuntu-2/src/base/ftapi.c freetype-2.3.9-ubuntu-3/src/base/ftapi.c
---- freetype-2.3.9-ubuntu-2/src/base/ftapi.c	2009-06-20 12:46:10.000000000 +0200
-+++ freetype-2.3.9-ubuntu-3/src/base/ftapi.c	2009-06-20 12:46:53.000000000 +0200
+diff -Naur src/base/ftapi.c.orig src/base/ftapi.c
+--- src/base/ftapi.c.orig	2009-06-20 12:46:10.000000000 +0200
++++ src/base/ftapi.c	2009-06-20 12:46:53.000000000 +0200
 @@ -118,4 +118,18 @@
    }
  
@@ -20,10 +20,10 @@ diff -Naur freetype-2.3.9-ubuntu-2/src/base/ftapi.c freetype-2.3.9-ubuntu-3/src/
 +
 +
  /* END */
-diff -Naur freetype-2.3.9-ubuntu-2/src/base/ftbase.c freetype-2.3.9-ubuntu-3/src/base/ftbase.c
---- freetype-2.3.9-ubuntu-2/src/base/ftbase.c	2009-06-20 12:46:10.000000000 +0200
-+++ freetype-2.3.9-ubuntu-3/src/base/ftbase.c	2009-06-20 12:46:53.000000000 +0200
-@@ -31,6 +31,7 @@
+diff -Naur src/base/ftbase.c.orig src/base/ftbase.c
+--- src/base/ftbase.c.orig	2009-06-20 12:46:10.000000000 +0200
++++ src/base/ftbase.c	2009-06-20 12:46:53.000000000 +0200
+@@ -33,6 +33,7 @@
  #include "ftstream.c"
  #include "fttrigon.c"
  #include "ftutil.c"
