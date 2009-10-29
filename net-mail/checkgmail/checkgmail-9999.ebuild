@@ -30,10 +30,10 @@ RDEPEND="${DEPEND}"
 
 src_install() {
 	dobin checkgmail || die "dobin failed"
-	dodoc ChangeLog Readme todo || die
+	dodoc ChangeLog Readme todo copying || die
 	insinto /usr/share/applications
-	doins files/${PN}.desktop
+	doins ${FILESDIR}/${PN}.desktop
 	insinto /usr/share/pixmaps
-	doins files/${PN}.png
+	doins ${FILESDIR}/${PN}.png
 	doman man/${PN}.1.gz || die
 }
