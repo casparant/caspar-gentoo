@@ -41,8 +41,8 @@ src_unpack() {
 	fi
 	cd "${S}"
 	epatch "${FILESDIR}"/${PN}-1.96-genkernel.patch #256335
-	epatch "${FIELSDIR}"/${PN}-1.98-915resolution-010.patch
-	epatch "${FIELSDIR}"/${PN}-1.98-915resolution-020.patch
+	epatch "${FILESDIR}"/${PN}-1.98-915resolution-010.patch
+	epatch "${FILESDIR}"/${PN}-1.98-915resolution-020.patch
 	epatch_user
 
 	# autogen.sh does more than just run autotools
