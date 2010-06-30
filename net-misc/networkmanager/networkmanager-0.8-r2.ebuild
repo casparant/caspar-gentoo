@@ -17,7 +17,8 @@ SRC_URI="${SRC_URI//${PN}/${MY_PN}}"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~ppc ~ppc64 ~x86"
-IUSE="avahi bluetooth doc nss gnutls dhclient dhcpcd resolvconf connection-sharing"
+IUSE="avahi bluetooth doc nss gnutls dhclient dhcpcd resolvconf
+connection-sharing -modemmanager"
 
 RDEPEND=">=sys-apps/dbus-1.2
 	>=dev-libs/dbus-glib-0.75
@@ -26,7 +27,7 @@ RDEPEND=">=sys-apps/dbus-1.2
 	>=dev-libs/glib-2.18
 	>=sys-auth/polkit-0.92
 	>=dev-libs/libnl-1.1
-	-modemmanager? ( >=net-misc/modemmanager-0.2 )
+	modemmanager? ( >=net-misc/modemmanager-0.2 )
 	>=net-wireless/wpa_supplicant-0.5.10[dbus]
 	bluetooth? ( net-wireless/bluez )
 	|| ( sys-libs/e2fsprogs-libs <sys-fs/e2fsprogs-1.41.0 )
