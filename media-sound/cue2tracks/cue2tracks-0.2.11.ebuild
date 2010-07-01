@@ -31,30 +31,6 @@ RDEPEND="
 	m4a? ( media-video/mpeg4ip media-libs/faac media-libs/faad2 )
 	"
 
-pkg_setup()
-{
-	if use mac && ! built_with_use media-sound/mac shntool ; then
-		echo ""
-		einfo "media-sound/mac not compiled with shntool support"
-		einfo "To recompile it with that USE flag download ebuild with patchset from overlay:"
-		einfo "http://cyberdungeon.org.ru/~killy/files/projects/cue2tracks/"
-		echo ""
-		epause 5
-	fi
-	if use tta && ! built_with_use media-sound/ttaenc shntool ; then
-		echo ""
-		einfo "Installed media-sound/ttaenc not compiled with shntool support"
-		einfo "To recompile it with shntool you need apply the patch"
-		einfo "http://cyberdungeon.org.ru/~killy/files/projects/cue2tracks/ttaenc-3.x-shntool.patch"
-		echo ""
-		einfo "add USE flag 'shntool' and add the line at end of section src_unpack():"
-		einfo "    use shntool && epatch \${FILESDIR}/ttaenc-3.x-shntool.patch"
-		echo ""
-		einfo "and reemerge modified media-sound/ttaenc"
-		epause 5
-	fi
-}
-
 src_install() {
 	dobin "${PN}" || die
 	dodoc AUTHORS INSTALL ChangeLog README TODO
