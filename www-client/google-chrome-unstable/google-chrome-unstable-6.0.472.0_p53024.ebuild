@@ -6,13 +6,12 @@ EAPI=2
 
 inherit eutils toolchain-funcs versionator
 
-MY_PN="${PN%-bin}-unstable"
-SRC_BASE="http://dl.google.com/linux/direct/"
+SRC_BASE="http://dl.google.com/linux/direct"
 DESCRIPTION="A browser that combines a minimal design with sophisticated technology"
 HOMEPAGE="http://www.google.com/chrome"
 SRC_URI="
-	x86? ( ${SRC_BASE}${MY_PN}_current_i386.deb )
-	amd64? ( ${SRC_BASE}${MY_PN}_current_amd64.deb )"
+	x86? ( ${SRC_BASE}/${PN}_current_i386.deb )
+	amd64? ( ${SRC_BASE}/${PN}_current_amd64.deb )"
 
 LICENSE="BSD"
 SLOT="0"
