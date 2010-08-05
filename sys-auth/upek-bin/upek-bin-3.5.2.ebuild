@@ -24,23 +24,24 @@ src_unpack() {
 }
 
 src_install() {
-	dodoc ${MY_PN}/Readme.pdf ${MY_PN}/releasenotes.txt ${MY_PN}/UPEK_EULA.pdf
+	cd ${FP_GUI}/${MY_PN}
+	dodoc Readme.pdf releasenotes.txt UPEK_EULA.pdf
 	if use headers; then
-		dodoc ${MY_PN}/doc/BSAPI.pdf  ${MY_PN}/doc/BSAPIUsageonLinux.pdf
+		dodoc doc/BSAPI.pdf  doc/BSAPIUsageonLinux.pdf
 		insinto /usr/include
-		doins ${MY_PN}/include/bsapi.h
-		doins ${MY_PN}/bserror.h
-		doins ${MY_PN}/bstypes.h
+		doins include/bsapi.h
+		doins bserror.h
+		doins bstypes.h
 	fi
 	if use x86; then
-		dolib ${MY_PN}/lib/libbsapi.so
+		dolib lib/libbsapi.so
 	elif use amd64; then
-		dolib ${MY_PN}/lib64/libbsapi.so
+		dolib lib64/libbsapi.so
 	fi
 	insinto /etc/udev/rules.d
-	doins ${MY_PN}/91-fingerprint-gui-upek.rules
+	doins 91-fingerprint-gui-upek.rules
 	dodir /var/${MY_PN}_data
-	echo "nvmprefix=\"/var/${MY_PN}_data/.NVM\" dualswipe=0" > ${MY_PN}/${MY_PN}.cfg
+	echo "nvmprefix=\"/var/${MY_PN}_data/.NVM\" dualswipe=0" > ${MY_PN}.cfg
 	insinto /etc
-	doins ${MY_PN}/${MY_PN}.cfg
+	doins ${MY_PN}.cfg
 }
