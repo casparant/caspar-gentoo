@@ -27,6 +27,10 @@ src_unpack() {
 	eautoreconf
 }
 
+src_prepare() {
+	epatch "${FILESDIR}/${PN}-0.1.0~pre2+upeke2driver.patch"
+}
+
 src_compile() {
 	econf || die "econf died"
 	emake || die "emake died"
