@@ -18,6 +18,11 @@ IUSE="-headers"
 DEPEND=""
 RDEPEND="${DEPEND}"
 
+src_unpack() {
+	unpack ${FP_GUI}-src.tar.gz
+	cd ${FP_GUI}/
+}
+
 src_install() {
 	dodoc ${MY_PN}/Readme.pdf ${MY_PN}/releasenotes.txt ${MY_PN}/UPEK_EULA.pdf
 	if use headers; then
