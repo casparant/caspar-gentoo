@@ -1,6 +1,5 @@
-diff -uNr libfprint-0.1.0-pre2/config.h.in libfprint-0.1.0~pre2+upeke2driver/config.h.in
---- libfprint-0.1.0-pre2/config.h.in	2009-06-20 15:51:55.000000000 +0200
-+++ libfprint-0.1.0~pre2+upeke2driver/config.h.in	2010-04-27 16:31:51.923335971 +0200
+--- config.h.in	2009-06-20 15:51:55.000000000 +0200
++++ config.h.in	2010-04-27 16:31:51.923335971 +0200
 @@ -30,6 +30,9 @@
  /* Build UPEK TouchStrip driver */
  #undef ENABLE_UPEKTS
@@ -11,9 +10,8 @@ diff -uNr libfprint-0.1.0-pre2/config.h.in libfprint-0.1.0~pre2+upeke2driver/con
  /* Build Digital Persona U.are.U 4000 driver */
  #undef ENABLE_URU4000
  
-diff -uNr libfprint-0.1.0-pre2/configure libfprint-0.1.0~pre2+upeke2driver/configure
---- libfprint-0.1.0-pre2/configure	2009-06-20 15:51:50.000000000 +0200
-+++ libfprint-0.1.0~pre2+upeke2driver/configure	2010-04-28 00:43:51.473032444 +0200
+--- configure	2009-06-20 15:51:50.000000000 +0200
++++ configure	2010-04-28 00:43:51.473032444 +0200
 @@ -818,6 +818,8 @@
  ENABLE_UPEKSONLY_TRUE
  ENABLE_UPEKTS_FALSE
@@ -86,9 +84,8 @@ diff -uNr libfprint-0.1.0-pre2/configure libfprint-0.1.0~pre2+upeke2driver/confi
  ac_cs_awk_cr=`$AWK 'BEGIN { print "a\rb" }' </dev/null 2>/dev/null`
  if test "$ac_cs_awk_cr" = "a${ac_cr}b"; then
    ac_cs_awk_cr='\\r'
-diff -uNr libfprint-0.1.0-pre2/configure.ac libfprint-0.1.0~pre2+upeke2driver/configure.ac
---- libfprint-0.1.0-pre2/configure.ac	2009-06-20 15:51:43.000000000 +0200
-+++ libfprint-0.1.0~pre2+upeke2driver/configure.ac	2010-04-28 00:38:12.423126973 +0200
+--- configure.ac	2009-06-20 15:51:43.000000000 +0200
++++ configure.ac	2010-04-28 00:38:12.423126973 +0200
 @@ -23,6 +23,7 @@
  
  require_imagemagick='no'
@@ -116,9 +113,8 @@ diff -uNr libfprint-0.1.0-pre2/configure.ac libfprint-0.1.0~pre2+upeke2driver/co
  #AM_CONDITIONAL([ENABLE_UPEKTC], [test "$enable_upektc" != "no"])
  AM_CONDITIONAL([ENABLE_UPEKSONLY], [test "$enable_upeksonly" != "no"])
  AM_CONDITIONAL([ENABLE_VCOM5S], [test "$enable_vcom5s" != "no"])
-diff -uNr libfprint-0.1.0-pre2/libfprint/core.c libfprint-0.1.0~pre2+upeke2driver/libfprint/core.c
---- libfprint-0.1.0-pre2/libfprint/core.c	2008-11-25 17:08:27.000000000 +0100
-+++ libfprint-0.1.0~pre2+upeke2driver/libfprint/core.c	2010-04-27 16:29:54.613334600 +0200
+--- libfprint/core.c	2008-11-25 17:08:27.000000000 +0100
++++ libfprint/core.c	2010-04-27 16:29:54.613334600 +0200
 @@ -343,6 +343,9 @@
  #ifdef ENABLE_UPEKTS
  	&upekts_driver,
@@ -129,9 +125,8 @@ diff -uNr libfprint-0.1.0-pre2/libfprint/core.c libfprint-0.1.0~pre2+upeke2drive
  };
  
  static struct fp_img_driver * const img_drivers[] = {
-diff -uNr libfprint-0.1.0-pre2/libfprint/drivers/upeke2.c libfprint-0.1.0~pre2+upeke2driver/libfprint/drivers/upeke2.c
---- libfprint-0.1.0-pre2/libfprint/drivers/upeke2.c	1970-01-01 01:00:00.000000000 +0100
-+++ libfprint-0.1.0~pre2+upeke2driver/libfprint/drivers/upeke2.c	2010-04-27 15:53:51.084584462 +0200
+--- libfprint/drivers/upeke2.c	1970-01-01 01:00:00.000000000 +0100
++++ libfprint/drivers/upeke2.c	2010-04-27 15:53:51.084584462 +0200
 @@ -0,0 +1,1461 @@
 +/*
 + * Copyright (C) 2010 Jorge Suarez de Lis <yo@jorgesuarezdelis.name>
@@ -1594,9 +1589,8 @@ diff -uNr libfprint-0.1.0-pre2/libfprint/drivers/upeke2.c libfprint-0.1.0~pre2+u
 +	.verify_stop = verify_stop,
 +};
 +
-diff -uNr libfprint-0.1.0-pre2/libfprint/fp_internal.h libfprint-0.1.0~pre2+upeke2driver/libfprint/fp_internal.h
---- libfprint-0.1.0-pre2/libfprint/fp_internal.h	2008-11-20 15:53:01.000000000 +0100
-+++ libfprint-0.1.0~pre2+upeke2driver/libfprint/fp_internal.h	2010-04-27 09:48:41.571830570 +0200
+--- libfprint/fp_internal.h	2008-11-20 15:53:01.000000000 +0100
++++ libfprint/fp_internal.h	2010-04-27 09:48:41.571830570 +0200
 @@ -238,6 +238,9 @@
  #ifdef ENABLE_UPEKTS
  extern struct fp_driver upekts_driver;
@@ -1607,9 +1601,8 @@ diff -uNr libfprint-0.1.0-pre2/libfprint/fp_internal.h libfprint-0.1.0~pre2+upek
  #ifdef ENABLE_UPEKTC
  extern struct fp_img_driver upektc_driver;
  #endif
-diff -uNr libfprint-0.1.0-pre2/libfprint/Makefile.am libfprint-0.1.0~pre2+upeke2driver/libfprint/Makefile.am
---- libfprint-0.1.0-pre2/libfprint/Makefile.am	2008-11-18 18:18:21.000000000 +0100
-+++ libfprint-0.1.0~pre2+upeke2driver/libfprint/Makefile.am	2010-04-27 09:20:42.774330422 +0200
+--- libfprint/Makefile.am	2008-11-18 18:18:21.000000000 +0100
++++ libfprint/Makefile.am	2010-04-27 09:20:42.774330422 +0200
 @@ -2,6 +2,7 @@
  noinst_PROGRAMS = fprint-list-hal-info
  MOSTLYCLEANFILES = $(hal_fdi_DATA)
@@ -1629,9 +1622,8 @@ diff -uNr libfprint-0.1.0-pre2/libfprint/Makefile.am libfprint-0.1.0~pre2+upeke2
  if ENABLE_UPEKTS
  DRIVER_SRC += $(UPEKTS_SRC)
  endif
-diff -uNr libfprint-0.1.0-pre2/libfprint/Makefile.in libfprint-0.1.0~pre2+upeke2driver/libfprint/Makefile.in
---- libfprint-0.1.0-pre2/libfprint/Makefile.in	2009-06-20 15:51:49.000000000 +0200
-+++ libfprint-0.1.0~pre2+upeke2driver/libfprint/Makefile.in	2010-04-27 16:16:56.714452813 +0200
+--- libfprint/Makefile.in	2009-06-20 15:51:49.000000000 +0200
++++ libfprint/Makefile.in	2010-04-27 16:16:56.714452813 +0200
 @@ -37,13 +37,14 @@
  host_triplet = @host@
  noinst_PROGRAMS = fprint-list-hal-info$(EXEEXT)
