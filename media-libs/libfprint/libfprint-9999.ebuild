@@ -26,6 +26,14 @@ src_unpack() {
 	./autogen.sh	
 	eautoreconf
 	epatch "${FILESDIR}/${PN}-0.1.0~pre2+upeke2driver.patch"
+	epatch "${FILESDIR}/0001-Add-gdk-pixbuf-support.patch"
+	epatch "${FILESDIR}/0001-Add-some-corrective-action-if-there-are-missing-pack.patch"
+	epatch "${FILESDIR}/0001-Add-udev-rules-to-set-devices-to-autosuspend.patch"
+	epatch "${FILESDIR}/0001-Dont-consider-the-scan-complete-unless-there-is-atle.patch"
+	epatch "${FILESDIR}/0001-Fix-a-segfault-that-occured-if-a-scan-was-shorter-th-0001.patch"
+	epatch "${FILESDIR}/0002-Make-the-2-right-shift-correction-happen-on-image-ha.patch"
+	epatch "${FILESDIR}/0002-upexonly.c-Fix-a-vertical-distortion-in-image-data.patch"
+	epatch "${FILESDIR}/0004-libfprint-nuke-upeksonly.patch"
 }
 
 src_compile() {
