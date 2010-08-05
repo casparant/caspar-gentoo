@@ -74,16 +74,6 @@
  if test -z "${ENABLE_UPEKTS_TRUE}" && test -z "${ENABLE_UPEKTS_FALSE}"; then
    { { $as_echo "$as_me:$LINENO: error: conditional \"ENABLE_UPEKTS\" was never defined.
  Usually this means the macro was only invoked conditionally." >&5
-@@ -13242,7 +13269,8 @@
- if test -n "$CONFIG_FILES"; then
- 
- 
--ac_cr=''
-+ac_cr='
-+'
- ac_cs_awk_cr=`$AWK 'BEGIN { print "a\rb" }' </dev/null 2>/dev/null`
- if test "$ac_cs_awk_cr" = "a${ac_cr}b"; then
-   ac_cs_awk_cr='\\r'
 --- configure.ac	2009-06-20 15:51:43.000000000 +0200
 +++ configure.ac	2010-04-28 00:38:12.423126973 +0200
 @@ -23,6 +23,7 @@
