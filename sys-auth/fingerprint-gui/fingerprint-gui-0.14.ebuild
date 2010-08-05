@@ -4,6 +4,8 @@
 
 EAPI=3
 
+inherit qt4
+
 DESCRIPTION="Use Fingerprint Devices with Linux"
 HOMEPAGE="http://www.n-view.net/Appliance/fingerprint/"
 SRC_URI="http://www.n-view.net/Appliance/fingerprint/download/${P}-src.tar.gz"
