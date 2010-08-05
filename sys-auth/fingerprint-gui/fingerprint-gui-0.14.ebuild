@@ -53,7 +53,7 @@ src_install() {
 
 pkg_postinst() {
 	elog "You should add the following line to the first of /etc/pam.d/system-auth"
-	elog "  auth        sufficient  pam_fingerprint-gui.so debug"
+	elog "  auth        sufficient  libpam_fingerprint-gui.so"
 	elog "You must be in the plugdev group to use fingerprint"
 	if use upek; then
 		elog "You select to install upek, it's not open-sourced. Use it on your"
