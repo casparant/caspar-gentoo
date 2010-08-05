@@ -28,7 +28,7 @@ upek? ( sys-auth/upek-bin )"
 
 src_configure() {
 	sed -i 's/\/usr\/local/\/usr/' install.sh
-	eqmake4
+	eqmake4 fingerprint.pro
 }
 
 src_install() {
