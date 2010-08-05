@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="x86 amd64"
 IUSE="upek"
 
-DEPEND=">=media-libs/libfprint-0.1.0_pre2
+DEPEND=">=sys-auth/libfprint-0.1.0_pre2
 x11-libs/libfakekey
 >=app-crypt/qca-2.0.0
 >=app-crypt/qca-gnupg-2.0.0_beta
@@ -28,9 +28,6 @@ upek? ( sys-auth/upek-bin )"
 
 src_configure() {
 	sed -i 's/\/usr\/local/\/usr/' install.sh
-}
-
-src_compile() {
 	eqmake4
 }
 
