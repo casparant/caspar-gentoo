@@ -41,7 +41,7 @@ src_install() {
 	insinto /etc/udev/rules.d
 	doins 91-fingerprint-gui-upek.rules
 	dodir /var/${MY_PN}_data
-	fperms /var/${MY_PN}_data
+	fperms 777 /var/${MY_PN}_data
 	echo "nvmprefix=\"/var/${MY_PN}_data/.NVM\" dualswipe=0" > ${MY_PN}.cfg
 	insinto /etc
 	doins ${MY_PN}.cfg
