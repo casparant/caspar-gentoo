@@ -25,9 +25,6 @@ src_unpack() {
 	cd ${S}
 	./autogen.sh	
 	eautoreconf
-}
-
-src_prepare() {
 	epatch "${FILESDIR}/${PN}-0.1.0~pre2+upeke2driver.patch"
 }
 
