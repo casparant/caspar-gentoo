@@ -20,7 +20,6 @@ x11-libs/libfakekey
 >=app-crypt/qca-2.0.0
 >=app-crypt/qca-gnupg-2.0.0_beta
 >=app-crypt/qca-ossl-2.0.0_beta
-!sys-auth/pam_fprint
 || ( ( x11-libs/qt-core x11-libs/qt-gui ) x11-libs/qt:4 )
 "
 RDEPEND="${DEPEND}
@@ -43,8 +42,7 @@ src_install() {
 	elif use amd64; then
 		insinto /lib64/security
 	fi
-	insopts -m0644
-	doins bin/fingerprint-pam/libpam_fingerprint-gui.so
+	newins bin/fingerprint-pam/libpam_fingerprint-gui.so pam_fingerprint-gui.so
 	insinto /usr/share/applications
 	doins bin/fingerprint-gui/fingerprint-gui.desktop
 	dodoc CHANGELOG COPYING \
@@ -52,11 +50,11 @@ src_install() {
 }
 
 pkg_postinst() {
-	elog "You should add the following line to the first of /etc/pam.d/system-auth"
-	elog "  auth        sufficient  libpam_fingerprint-gui.so"
-	elog "You must be in the plugdev group to use fingerprint"
+	elog "1) You should add the following line to the first of /etc/pam.d/system-auth"
+	elog "   auth        sufficient  pam_fingerprint-gui.so debug"
+	elog "2) You must be in the plugdev group to use fingerprint"
 	if use upek; then
-		elog "You select to install upek, it's not open-sourced. Use it on your"
-		elog "own risk."
+		elog "3) You select to install upek, it's not open-sourced. Use it in your"
+		elog "   own risk."
 	fi
 }
