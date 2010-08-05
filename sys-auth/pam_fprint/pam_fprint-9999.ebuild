@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE=""
 
-DEPEND="=media-libs/libfprint-9999
+DEPEND="=sys-auth/libfprint-9999
 	sys-libs/pam"
 
 src_unpack() {
