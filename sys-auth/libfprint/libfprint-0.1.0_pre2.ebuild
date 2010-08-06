@@ -17,12 +17,10 @@ IUSE=""
 DEPEND="dev-libs/libusb
 	media-gfx/imagemagick"
 
-src_unpack() {
-	pwd
+src_prepare() {
 	epatch "${FILESDIR}/0001-Add-gdk-pixbuf-support.patch"
 	epatch "${FILESDIR}/0001-Add-udev-rules-to-set-devices-to-autosuspend.patch"
 	epatch "${FILESDIR}/${PN}-aes1610-driver.patch"
-	eautoreconf
 }
 
 src_install() {
