@@ -21,3 +21,11 @@ src_configure() {
 	./autogen.sh	
 	eautoreconf
 }
+
+src_compile() {
+	emake || die "make failed"
+}
+
+src_install() {
+	emake install || die "install failed"
+}
