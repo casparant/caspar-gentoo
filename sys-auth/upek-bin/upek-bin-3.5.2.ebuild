@@ -25,6 +25,7 @@ src_unpack() {
 }
 
 src_install() {
+	cd "${S}"/
 	dodoc Readme.pdf releasenotes.txt UPEK_EULA.pdf
 	if use headers; then
 		dodoc doc/BSAPI.pdf  doc/BSAPIUsageonLinux.pdf
