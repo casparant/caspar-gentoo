@@ -13,8 +13,3 @@ IUSE=""
 
 DEPEND="dev-libs/libusb
 	media-gfx/imagemagick"
-
-src_install() {
-	emake DESTDIR="${D}" install
-}
-
