@@ -18,7 +18,8 @@ DEPEND="media-gfx/imagemagick
 	dev-libs/libusb"
 
 src_unpack() {
-	cd ${S}
+	git_src_unpack
+	cd "${S}"
 	./autogen.sh	
 	eautoreconf
 }
@@ -32,5 +33,5 @@ src_compile() {
 }
 
 src_install() {
-	emake install || die "install failed"
+	emake DESTDIR="${D}" install || die "install failed"
 }
