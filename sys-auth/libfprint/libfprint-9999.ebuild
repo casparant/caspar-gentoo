@@ -17,12 +17,20 @@ KEYWORDS="~x86 ~amd64"
 DEPEND="media-gfx/imagemagick
 	dev-libs/libusb"
 
-src_configure() {
+src_unpack() {
+	cd ${S}
 	./autogen.sh	
 	eautoreconf
 }
 
-src_install() {
+src_configure() {
+	econf || die "./configure failed"
+}
+
+src_compile() {
 	emake || die "make failed"
+}
+
+src_install() {
 	emake install || die "install failed"
 }
