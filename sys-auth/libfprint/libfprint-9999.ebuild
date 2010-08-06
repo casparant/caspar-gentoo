@@ -23,15 +23,3 @@ src_unpack() {
 	./autogen.sh	
 	eautoreconf
 }
-
-src_configure() {
-	econf || die "./configure failed"
-}
-
-src_compile() {
-	emake || die "make failed"
-}
-
-src_install() {
-	emake DESTDIR="${D}" install || die "install failed"
-}
