@@ -18,13 +18,15 @@ IUSE="-headers"
 DEPEND=""
 RDEPEND="${DEPEND}"
 
-src_unpack() {
-	unpack ${FP_GUI}-src.tar.gz
-	cd ${FP_GUI}/
-}
+S=${FP_GUI}/${MY_PN}
+
+#src_unpack() {
+#	unpack ${FP_GUI}-src.tar.gz
+#	cd ${FP_GUI}/
+#}
 
 src_install() {
-	cd ${FP_GUI}/${MY_PN}
+#	cd ${FP_GUI}/${MY_PN}
 	dodoc Readme.pdf releasenotes.txt UPEK_EULA.pdf
 	if use headers; then
 		dodoc doc/BSAPI.pdf  doc/BSAPIUsageonLinux.pdf

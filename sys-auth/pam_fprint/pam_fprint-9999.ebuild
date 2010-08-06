@@ -25,11 +25,6 @@ src_unpack() {
 	eautoreconf
 }
 
-src_compile() {
-	econf || die "econf failed"
-	emake || die "emake failed"
-}
-
 src_install() {
 	emake DESTDIR="${D}" install || "emake install failed"
 }
