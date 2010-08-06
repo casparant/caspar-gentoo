@@ -4,7 +4,7 @@
 
 EAPI="2"
 
-inherit eutils flag-o-matic versionator autotools multilib-native
+inherit eutils flag-o-matic versionator autotools
 
 PATCHV="0.5"
 MY_P=${P/mit-}
@@ -28,12 +28,12 @@ S=${WORKDIR}/${MY_P}/src
 
 PROVIDE="virtual/krb5"
 
-multilib-native_src_unpack_internal() {
+src_unpack() {
 	unpack ${A}
 	unpack ./${MY_P}.tar.gz
 }
 
-multilib-native_src_prepare_internal() {
+src_prepare() {
 	EPATCH_SOURCE="${WORKDIR}/patch" EPATCH_SUFFIX="patch" epatch
 	epatch "${FILESDIR}/CVE-2009-0844+CVE-2009-0847.patch"
 	epatch "${FILESDIR}/CVE-2009-0846.patch"
@@ -49,7 +49,7 @@ multilib-native_src_prepare_internal() {
 	done
 }
 
-multilib-native_src_configure_internal() {
+src_configure() {
 	# needed to work with sys-libs/e2fsprogs-libs <- should be removed!!
 	append-flags "-I/usr/include/et"
 	econf \
@@ -60,7 +60,7 @@ multilib-native_src_configure_internal() {
 		--enable-kdc-replay-cache || die
 }
 
-multilib-native_src_compile_internal() {
+src_compile() {
 	emake -j1 || die
 
 	if use doc ; then
@@ -75,7 +75,7 @@ src_test() {
 	einfo "Tests do not run in sandbox, have a lot of dependencies and are therefore completely disabled."
 }
 
-multilib-native_src_install_internal() {
+src_install() {
 	emake \
 		DESTDIR="${D}" \
 		EXAMPLEDIR=/usr/share/doc/${PF}/examples \
@@ -111,6 +111,6 @@ multilib-native_src_install_internal() {
 	prep_ml_binaries /usr/bin/krb5-config
 }
 
-multilib-native_pkg_postinst_internal() {
+pkg_postinst() {
 	elog "See /usr/share/doc/${PF}/html/krb5-admin.html for documentation."
 }
