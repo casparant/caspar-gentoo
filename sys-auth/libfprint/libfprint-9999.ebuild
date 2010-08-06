@@ -1,13 +1,10 @@
-# Copyright 1999-2006 Gentoo Foundation
+# Copyright 1999-2010 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
 inherit git eutils autotools
 
 EGIT_REPO_URI="git://github.com/dsd/libfprint.git"
-#EGIT_BRANCH="libusb-1.0"
-#EGIT_TREE="libusb-1.0"
-
 
 DESCRIPTION="libfprint"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
