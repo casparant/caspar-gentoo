@@ -4,10 +4,11 @@
 
 inherit eutils
 
+MY_P=${P/_/-}
 EPATCH_OPTS="-p1"
 DESCRIPTION="libfprint"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
-SRC_URI="mirror://sourceforge/fprint/${P/_/-}.tar.bz2"
+SRC_URI="mirror://sourceforge/fprint/${MY_P}.tar.bz2"
 
 LICENSE="LGPL-2"
 SLOT="0"
@@ -17,9 +18,11 @@ IUSE=""
 DEPEND="dev-libs/libusb
 	media-gfx/imagemagick"
 
+S="${WORKDIR}/${MY_P}"
+
 src_unpack() {
-	unpack "${A}"
-	cd "${S}"
+#	unpack "${A}"
+#	cd "${S}"
 	epatch "${FILESDIR}/0001-Add-gdk-pixbuf-support.patch"
 	epatch "${FILESDIR}/0001-Add-udev-rules-to-set-devices-to-autosuspend.patch"
 	epatch "${FILESDIR}/${PN}-aes1610-driver.patch"
