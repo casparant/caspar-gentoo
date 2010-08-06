@@ -15,9 +15,9 @@ IUSE=""
 
 DEPEND="dev-libs/libusb
 	media-gfx/imagemagick"
-EPATCH_OPTS="-p1 -d ${$}"
 
 src_unpack() {
+	unpack
 	epatch "${FILESDIR}/0001-Add-gdk-pixbuf-support.patch"
 	epatch "${FILESDIR}/0001-Add-udev-rules-to-set-devices-to-autosuspend.patch"
 	epatch "${FILESDIR}/${PN}-aes1610-driver.patch"
