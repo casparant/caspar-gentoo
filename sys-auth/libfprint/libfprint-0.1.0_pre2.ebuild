@@ -5,7 +5,6 @@
 inherit eutils
 
 MY_P=${P/_/-}
-EPATCH_OPTS="-p1"
 DESCRIPTION="libfprint"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
 SRC_URI="mirror://sourceforge/fprint/${MY_P}.tar.bz2"
@@ -19,6 +18,7 @@ DEPEND="dev-libs/libusb
 	media-gfx/imagemagick"
 
 S="${WORKDIR}/${MY_P}"
+EPATCH_OPTS="-p1 -d ${S}"
 
 src_unpack() {
 #	unpack "${A}"
