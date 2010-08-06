@@ -13,6 +13,35 @@ The script itself contains whitelists and blacklists.
  2 files changed, 84 insertions(+), 2 deletions(-)
  create mode 100644 libfprint/fprint-list-udev-rules.c
 
+diff --git a/libfprint/Makefile.am b/libfprint/Makefile.am
+index 0eb5ca6..7f05468 100644
+--- a/libfprint/Makefile.am
++++ b/libfprint/Makefile.am
+@@ -1,6 +1,6 @@
+ lib_LTLIBRARIES = libfprint.la
+-noinst_PROGRAMS = fprint-list-hal-info
+-MOSTLYCLEANFILES = $(hal_fdi_DATA)
++noinst_PROGRAMS = fprint-list-hal-info fprint-list-udev-rules
++MOSTLYCLEANFILES = $(hal_fdi_DATA) $(udev_rules_DATA)
+ 
+ UPEKTS_SRC = drivers/upekts.c
+ UPEKTC_SRC = drivers/upektc.c
+@@ -66,6 +66,15 @@ hal_fdidir = $(datadir)/hal/fdi/information/20thirdparty/
+ $(hal_fdi_DATA): fprint-list-hal-info
+ 	$(builddir)/fprint-list-hal-info > $@
+ 
++fprint_list_udev_rules_SOURCES = fprint-list-udev-rules.c
++fprint_list_udev_rules_CFLAGS = -fvisibility=hidden -I$(srcdir)/nbis/include $(LIBUSB_CFLAGS) $(GLIB_CFLAGS) $(IMAGEMAGICK_CFLAGS) $(CRYPTO_CFLAGS) $(AM_CFLAGS)
++fprint_list_udev_rules_LDADD = $(builddir)/libfprint.la
++
++udev_rules_DATA = 60-fprint-autosuspend.rules
++udev_rulesdir = $(sysconfdir)/udev/rules.d/
++
++$(udev_rules_DATA): fprint-list-udev-rules
++	$(builddir)/fprint-list-udev-rules > $@
+ 
+ if ENABLE_UPEKTS
+ DRIVER_SRC += $(UPEKTS_SRC)
 diff --git a/libfprint/fprint-list-udev-rules.c b/libfprint/fprint-list-udev-rules.c
 new file mode 100644
 index 0000000..874e41a
@@ -73,7 +102,7 @@ index 0000000..874e41a
 +	if (blacklist)
 +	    continue;
 +
-+	printf ("SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"%04x\", ATTRS{idProduct}==\"%04x\", ATTR{power/level}=\"auto\"\n", driver->id_table[i].vendor, driver->id_table[i].product);
++	printf ("SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"%04x\", ATTRS{idProduct}==\"%04x\", ATTRS{dev}==\"*\", ATTR{power/level}=\"auto\"\n", driver->id_table[i].vendor, driver->id_table[i].product);
 +    }
 +}
 +
@@ -95,29 +124,3 @@ index 0000000..874e41a
 -- 
 1.6.4.4
 
---- a/libfprint/Makefile.am.orig	2010-05-10 15:38:07.205857795 -0400
-+++ b/libfprint/Makefile.am	2010-05-10 15:39:28.155536829 -0400
-@@ -1,6 +1,6 @@
- lib_LTLIBRARIES = libfprint.la
--noinst_PROGRAMS = fprint-list-hal-info
--MOSTLYCLEANFILES = $(hal_fdi_DATA)
-+noinst_PROGRAMS = fprint-list-hal-info fprint-list-udev-rules
-+MOSTLYCLEANFILES = $(hal_fdi_DATA) $(udev_rules_DATA)
- 
- UPEKE2_SRC = drivers/upeke2.c
- UPEKTS_SRC = drivers/upekts.c
-@@ -67,6 +67,14 @@
- $(hal_fdi_DATA): fprint-list-hal-info
- 	$(builddir)/fprint-list-hal-info > $@
- 
-+fprint_list_udev_rules_CFLAGS = -fvisibility=hidden -I$(srcdir)/nbis/include $(LIBUSB_CFLAGS) $(GLIB_CFLAGS) $(IMAGEMAGICK_CFLAGS) $(CRYPTO_CFLAGS) $(AM_CFLAGS)
-+fprint_list_udev_rules_LDADD = $(builddir)/libfprint.la
-+
-+udev_rules_DATA = 60-fprint-autosuspend.rules
-+udev_rulesdir = $(sysconfdir)/udev/rules.d/
-+
-+$(udev_rules_DATA): fprint-list-udev-rules
-+	$(builddir)/fprint-list-udev-rules > $@
- 
- if ENABLE_UPEKE2
- DRIVER_SRC += $(UPEKE2_SRC)
