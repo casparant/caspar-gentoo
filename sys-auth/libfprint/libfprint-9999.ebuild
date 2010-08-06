@@ -17,7 +17,7 @@ KEYWORDS="~x86 ~amd64"
 DEPEND="media-gfx/imagemagick
 	dev-libs/libusb"
 
-src_configure() {
+src_unpack() {
 	./autogen.sh	
 	eautoreconf
 }
