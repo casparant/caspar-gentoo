@@ -34,7 +34,7 @@ src_install() {
 		doins bserror.h
 		doins bstypes.h
 	fi
-	if use i386; then
+	if use x86; then
 		dolib lib/libbsapi.so
 	elif use amd64; then
 		dolib lib64/libbsapi.so
