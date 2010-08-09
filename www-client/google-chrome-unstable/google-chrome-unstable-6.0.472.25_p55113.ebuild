@@ -51,7 +51,7 @@ QA_TEXTRELS="opt/google/chrome/libavcodec.so.52
 pkg_nofetch() {
 	elog "Please download"
 	for i in ${A}; do
-		[[ ${i} = ${MY_PN}_* ]] && elog "${SRC_BASE}${i}"
+		[[ ${i} = ${PN}_* ]] && elog "${SRC_BASE}${i}"
 	done
 	elog "and save to ${DISTDIR}"
 }
@@ -75,7 +75,7 @@ src_install() {
 	declare CHROME_HOME="/opt/google/chrome"
 
 	cd "${D}"
-	lzma -cd "${WORKDIR}"/${MY_PN}.tar.lzma | tar xvf - || die "Couldn't extract"
+	lzma -cd "${WORKDIR}"/${PN}.tar.lzma | tar xvf - || die "Couldn't extract"
 	rm -r "${D}"/{etc,usr/bin/google-chrome}
 
 	sed -i "s|Exec=${CHROME_HOME//\//\\/}\/|Exec=|g" "${D}"${CHROME_HOME}/${PN%-bin}.desktop
