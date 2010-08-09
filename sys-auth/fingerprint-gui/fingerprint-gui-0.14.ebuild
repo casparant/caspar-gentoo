@@ -36,15 +36,14 @@ src_configure() {
 	eqmake4 fingerprint.pro
 }
 
-D=/usr/local
-
 src_install() {
+	into /usr/local
 	dobin bin/fingerprint-gui/fingerprint-gui 
 	dobin bin/fingerprint-helper/fingerprint-helper
 	dobin bin/fingerprint-identifier/fingerprint-identifier
 	dobin bin/fingerprint-plugin/fingerprint-plugin
 	dobin bin/fingerprint-suid/fingerprint-suid
-	fperms u+s "${D}"/bin/fingerprint-suid
+	fperms u+s /usr/local/bin/fingerprint-suid
 	insinto /$(get_libdir)/security
 	newins bin/fingerprint-pam/libpam_fingerprint-gui.so pam_fingerprint-gui.so
 	domenu bin/fingerprint-gui/fingerprint-gui.desktop
