@@ -78,11 +78,12 @@ src_install() {
 	lzma -cd "${WORKDIR}"/${PN}.tar.lzma | tar xvf - || die "Couldn't extract"
 	rm -r "${D}"/{etc,usr/bin/google-chrome}
 
-	sed -i "s|Exec=${CHROME_HOME//\//\\/}\/|Exec=|g" "${D}"${CHROME_HOME}/${PN%-bin}.desktop
+	sed -i "s|Exec=${CHROME_HOME//\//\\/}\/|Exec=|g"
+	"${D}"${CHROME_HOME}/${PN%-unstable}.desktop
 	sed -i "s|Icon=google-chrome|Icon=/opt/google/chrome/product_logo_32.xpm|g" \
-		"${D}"${CHROME_HOME}/${PN%-bin}.desktop
-	domenu "${D}"${CHROME_HOME}/${PN%-bin}.desktop
-	rm "${D}"${CHROME_HOME}/${PN%-bin}.desktop
+		"${D}"${CHROME_HOME}/${PN%-unstable}.desktop
+	domenu "${D}"${CHROME_HOME}/${PN%-unstable}.desktop
+	rm "${D}"${CHROME_HOME}/${PN%-unstable}.desktop
 
 	if has_version ">=dev-libs/nss-3.12.5-r1" ; then 
 		MY_NSS_SUB=""
