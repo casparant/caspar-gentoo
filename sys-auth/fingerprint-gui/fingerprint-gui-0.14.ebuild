@@ -40,14 +40,9 @@ src_install() {
 	dobin bin/fingerprint-plugin/fingerprint-plugin
 	dobin bin/fingerprint-suid/fingerprint-suid
 	fperms u+s /usr/bin/fingerprint-suid
-	if use x86; then
-		insinto /lib/security
-	elif use amd64; then
-		insinto /lib64/security
-	fi
+	insinto /$(get_libdir)/security
 	newins bin/fingerprint-pam/libpam_fingerprint-gui.so pam_fingerprint.so
-	insinto /usr/share/applications
-	doins bin/fingerprint-gui/fingerprint-gui.desktop
+	domenu bin/fingerprint-gui/fingerprint-gui.desktop
 	dodoc CHANGELOG COPYING \
 		Hacking.pdf IMPORTANT-UPGRADE-INFORMATION.txt Install-step-by-step.pdf
 }

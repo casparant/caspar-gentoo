@@ -34,11 +34,7 @@ src_install() {
 		doins bserror.h
 		doins bstypes.h
 	fi
-	if use x86; then
-		dolib lib/libbsapi.so
-	elif use amd64; then
-		dolib lib64/libbsapi.so
-	fi
+	dolib $(get_libdir)/libbsapi.so
 	insinto /etc/udev/rules.d
 	doins 91-fingerprint-gui-upek.rules
 	dodir /var/${MY_PN}_data

@@ -78,7 +78,7 @@ src_install() {
 	lzma -cd "${WORKDIR}"/${PN}.tar.lzma | tar xvf - || die "Couldn't extract"
 	rm -r "${D}"/{etc,usr/bin/google-chrome}
 
-	sed -i "s|Exec=${CHROME_HOME//\//\\/}\/|Exec=|g"
+	sed -i "s|Exec=${CHROME_HOME//\//\\/}\/|Exec=|g" \
 	"${D}"${CHROME_HOME}/${PN%-unstable}.desktop
 	sed -i "s|Icon=google-chrome|Icon=/opt/google/chrome/product_logo_32.xpm|g" \
 		"${D}"${CHROME_HOME}/${PN%-unstable}.desktop
