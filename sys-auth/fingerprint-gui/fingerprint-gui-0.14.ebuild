@@ -27,11 +27,16 @@ RDEPEND="${DEPEND}
 upek? ( sys-auth/upek-bin )"
 
 src_configure() {
-	sed -i 's#/usr/local#/usr#' install.sh \
-								include/Globals.h \
-								bin/fingerprint-*/*.pro
+
+	# Something hard-coded exists, we left them in the
+	# /usr/local directory :-\
+	# sed -i 's#/usr/local#/usr#' install.sh \
+	# 								include/Globals.h \
+	#								bin/fingerprint-*/*.pro
 	eqmake4 fingerprint.pro
 }
+
+D=/usr/local
 
 src_install() {
 	dobin bin/fingerprint-gui/fingerprint-gui 
@@ -39,7 +44,7 @@ src_install() {
 	dobin bin/fingerprint-identifier/fingerprint-identifier
 	dobin bin/fingerprint-plugin/fingerprint-plugin
 	dobin bin/fingerprint-suid/fingerprint-suid
-	fperms u+s /usr/bin/fingerprint-suid
+	fperms u+s "${D}"/bin/fingerprint-suid
 	insinto /$(get_libdir)/security
 	newins bin/fingerprint-pam/libpam_fingerprint-gui.so pam_fingerprint-gui.so
 	domenu bin/fingerprint-gui/fingerprint-gui.desktop
