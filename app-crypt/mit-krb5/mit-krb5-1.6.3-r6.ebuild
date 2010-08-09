@@ -11,8 +11,8 @@ MY_P=${P/mit-}
 P_DIR=$(get_version_component_range 1-2)
 DESCRIPTION="MIT Kerberos V"
 HOMEPAGE="http://web.mit.edu/kerberos/www/"
-SRC_URI="http://web.mit.edu/kerberos/dist/krb5/${P_DIR}/${MY_P}-signed.tar
-	mirror://gentoo/${P}-patches-${PATCHV}.tar.bz2"
+SRC_URI="http://web.mit.edu/kerberos/dist/krb5/${P_DIR}/${MY_P}-signed.tar"
+#	mirror://gentoo/${P}-patches-${PATCHV}.tar.bz2"
 
 LICENSE="as-is"
 SLOT="0"
