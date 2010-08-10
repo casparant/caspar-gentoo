@@ -12,8 +12,8 @@ MY_P=${MY_PN}-${PV}
 
 DESCRIPTION="Network configuration and management in an easy way. Desktop environment independent."
 HOMEPAGE="http://www.gnome.org/projects/NetworkManager/"
-SRC_URI="${SRC_URI//${PN}/${MY_PN}}
-	http://dev.gentoo.org/~dagger/files/${PN}-ifnet.patch"
+SRC_URI="${SRC_URI//${PN}/${MY_PN}}"
+#	http://dev.gentoo.org/~dagger/files/${PN}-ifnet.patch"
 
 LICENSE="GPL-2"
 SLOT="0"
