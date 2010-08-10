@@ -13,7 +13,6 @@ MY_P=${MY_PN}-${PV}
 DESCRIPTION="Network configuration and management in an easy way. Desktop environment independent."
 HOMEPAGE="http://www.gnome.org/projects/NetworkManager/"
 SRC_URI="${SRC_URI//${PN}/${MY_PN}}"
-#	http://dev.gentoo.org/~dagger/files/${PN}-ifnet.patch"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -40,7 +39,7 @@ RDEPEND=">=sys-apps/dbus-1.2
 	!gnutls? ( >=dev-libs/nss-3.11 )
 	dhclient? (
 		dhcpcd? ( >=net-misc/dhcpcd-4.0.0_rc3 )
-		!dhcpcd? ( >=net-misc/dhcp-4.0.0 ) )
+		!dhcpcd? ( >=net-misc/dhcp-3.0.0 ) )
 	!dhclient? ( >=net-misc/dhcpcd-4.0.0_rc3 )
 	resolvconf? ( net-dns/openresolv )
 	connection-sharing? (
