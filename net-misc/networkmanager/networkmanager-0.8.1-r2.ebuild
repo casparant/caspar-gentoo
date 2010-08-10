@@ -38,14 +38,14 @@ RDEPEND=">=sys-apps/dbus-1.2
 		!nss? ( dev-libs/libgcrypt
 			net-libs/gnutls ) )
 	!gnutls? ( >=dev-libs/nss-3.11 )
+	dhclient? (
+		dhcpcd? ( >=net-misc/dhcpcd-4.0.0_rc3 )
+		!dhcpcd? ( >=net-misc/dhcp-4.0.0 ) )
+	!dhclient? ( >=net-misc/dhcpcd-4.0.0_rc3 )
 	resolvconf? ( net-dns/openresolv )
 	connection-sharing? (
 		net-dns/dnsmasq
 		net-firewall/iptables )"
-#	dhclient? (
-#		dhcpcd? ( >=net-misc/dhcpcd-4.0.0_rc3 )
-#		!dhcpcd? ( >=net-misc/dhcp-4.0.0 ) )
-#	!dhclient? ( >=net-misc/dhcpcd-4.0.0_rc3 )
 
 DEPEND="${RDEPEND}
 	dev-util/pkgconfig
