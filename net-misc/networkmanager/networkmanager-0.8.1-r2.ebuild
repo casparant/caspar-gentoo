@@ -18,8 +18,8 @@ SRC_URI="${SRC_URI//${PN}/${MY_PN}}
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~ppc ~ppc64 ~x86"
-IUSE="avahi bluetooth doc nss gnutls +dhclient -dhcpcd resolvconf
-connection-sharing -modem"
+IUSE="avahi bluetooth doc nss gnutls dhclient dhcpcd resolvconf
+connection-sharing modem"
 
 RDEPEND=">=sys-apps/dbus-1.2
 	>=dev-libs/dbus-glib-0.75
@@ -40,7 +40,7 @@ RDEPEND=">=sys-apps/dbus-1.2
 	!gnutls? ( >=dev-libs/nss-3.11 )
 	dhclient? (
 		dhcpcd? ( >=net-misc/dhcpcd-4.0.0_rc3 )
-		!dhcpcd? ( >=net-misc/dhcp-3.0.0 ) )
+		!dhcpcd? ( >=net-misc/dhcp-4.0.0 ) )
 	!dhclient? ( >=net-misc/dhcpcd-4.0.0_rc3 )
 	resolvconf? ( net-dns/openresolv )
 	connection-sharing? (
