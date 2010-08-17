@@ -36,9 +36,9 @@ src_install() {
 #without gstreamer , newmessage.wav is useless
 	use gstreamer || rm resource/newmessage.wav
 
-#	insinto /usr/share/openfetion
-#	doins -r skin resource || die
-#
+	insinto /usr/share/openfetion
+	doins -r skin resource || die
+
 #	insinto /usr/share/applications
 #	doins resource/openfetion.desktop || die
 #
