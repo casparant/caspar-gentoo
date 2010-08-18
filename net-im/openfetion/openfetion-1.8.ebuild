@@ -30,8 +30,8 @@ src_configure() {
 	econf ${myconf}
 }
 
-src_install() {
-	einstall
+#src_install() {
+#	einstall
 #clean up the makefiles unwanted
 #	rm skin/face_images/Makefile* skin/Makefile* resource/Makefile*
 #without gstreamer , newmessage.wav is useless
@@ -46,7 +46,7 @@ src_install() {
 #	dobin src/${PN} || die
 
 #	make install
-
+pkg_postinst(){
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
 	einfo "and compile it again."
