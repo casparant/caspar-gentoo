@@ -39,10 +39,10 @@ src_install() {
 	insinto /usr/share/openfetion
 	doins -r skin resource || die
 
-#	insinto /usr/share/applications
-#	doins resource/openfetion.desktop || die
-#
-#	dobin src/${PN} || die
+	insinto /usr/share/applications
+	doins resource/openfetion.desktop || die
+
+	dobin src/${PN} || die
 
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
