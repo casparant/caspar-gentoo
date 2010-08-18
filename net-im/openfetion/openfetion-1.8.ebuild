@@ -30,22 +30,6 @@ src_configure() {
 	econf ${myconf}
 }
 
-#src_install() {
-#	einstall
-#clean up the makefiles unwanted
-#	rm skin/face_images/Makefile* skin/Makefile* resource/Makefile*
-#without gstreamer , newmessage.wav is useless
-#	use gstreamer || rm resource/newmessage.wav
-
-#	insinto /usr/share/openfetion
-#	doins -r skin resource || die
-
-#	insinto /usr/share/applications
-#	doins resource/openfetion.desktop || die
-
-#	dobin src/${PN} || die
-
-#	make install
 pkg_postinst(){
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
