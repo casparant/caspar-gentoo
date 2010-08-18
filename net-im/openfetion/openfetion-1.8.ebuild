@@ -4,7 +4,7 @@
 
 EAPI="2"
 
-inherit flag-o-matic eutils
+inherit gnome2 eutils
 
 DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
