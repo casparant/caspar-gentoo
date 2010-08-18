@@ -25,7 +25,7 @@ RDEPEND=${DEPEND}
 
 src_configure() {
 	use notify || sed -i 's/-lnotify//' src/Makefile.{am,in}
-	local myconf="--prefix=${D}"
+	local myconf=""
 	use debug && myconf="${myconf} --enable-debug"
 	econf ${myconf}
 }
@@ -45,7 +45,7 @@ src_install() {
 
 #	dobin src/${PN} || die
 
-	make DESTDIR=${D} install
+	make install
 
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
