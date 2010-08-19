@@ -15,7 +15,8 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 
 DEPEND="media-gfx/imagemagick
-	>=dev-libs/libusb-1.0.0"
+	>=dev-libs/libusb-1.0.0
+	dev-util/gtk-doc"
 
 src_unpack() {
 	git_src_unpack

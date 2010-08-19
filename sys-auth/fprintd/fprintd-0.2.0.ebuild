@@ -14,5 +14,6 @@ KEYWORDS="~x86 ~amd64"
 IUSE=""
 
 DEPEND=">=dev-libs/libusb-1.0.0
-	>=sys-auth/libfprint-0.2.0"
+	>=sys-auth/libfprint-0.2.0
+	dev-util/gtk-doc"
 RDEPEND="${DEPEND}"
