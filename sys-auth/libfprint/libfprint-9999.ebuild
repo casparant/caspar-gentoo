@@ -4,7 +4,8 @@
 
 inherit git eutils autotools
 
-EGIT_REPO_URI="git://github.com/dsd/libfprint.git"
+#EGIT_REPO_URI="git://github.com/dsd/libfprint.git"
+EGIT_REPO_URI="git://anongit.freedesktop.org/libfprint/libfprint"
 
 DESCRIPTION="libfprint"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
@@ -20,7 +21,7 @@ DEPEND="media-gfx/imagemagick
 src_unpack() {
 	git_src_unpack
 	cd "${S}"
-	./autogen.sh	
+	./autogen.sh
 	eautoreconf
 }
 

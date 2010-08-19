@@ -18,17 +18,13 @@ DEPEND="dev-libs/libusb
 	media-gfx/imagemagick"
 
 S="${WORKDIR}/${MY_P}"
-EPATCH_OPTS="-p1 -d ${S}"
 
 src_unpack() {
 	unpack "${A}"
 	cd "${S}"
-	epatch "${FILESDIR}/0001-Add-gdk-pixbuf-support.patch"
-	epatch "${FILESDIR}/0001-Add-udev-rules-to-set-devices-to-autosuspend.patch"
 	eautoreconf
 }
 
 src_install() {
 	emake DESTDIR="${D}" install
 }
-
