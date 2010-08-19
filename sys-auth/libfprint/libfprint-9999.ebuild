@@ -5,7 +5,7 @@
 inherit git eutils autotools
 
 #EGIT_REPO_URI="git://github.com/dsd/libfprint.git"
-EGIT_REPO_URI="git://anongit.freedesktop.org/libfprint/libfprint"
+EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}"
 
 DESCRIPTION="libfprint"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
