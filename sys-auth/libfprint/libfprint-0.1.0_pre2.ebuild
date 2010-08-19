@@ -14,7 +14,7 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE=""
 
-DEPEND="dev-libs/libusb
+DEPEND=">=dev-libs/libusb-1.0.0
 	media-gfx/imagemagick"
 
 S="${WORKDIR}/${MY_P}"
