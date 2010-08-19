@@ -4,10 +4,10 @@
 
 inherit git eutils autotools
 
-EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}"
+EGIT_REPO_URI="git://anongit.freedesktop.org/libfprint/${PN}"
 
 DESCRIPTION="a D-Bus daemon offers libfprint functionality"
-HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
+HOMEPAGE="http://www.reactivated.net/fprint/wiki/Fprintd"
 SRC_URI=""
 
 LICENSE="LGPL-2"
