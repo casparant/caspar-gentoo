@@ -10,13 +10,15 @@ DESCRIPTION="a D-Bus daemon offers libfprint functionality"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Fprintd"
 SRC_URI=""
 
-LICENSE="LGPL-2"
+LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 ~amd64"
+IUSE="-static -doc pam"
 
 DEPEND="media-gfx/imagemagick
 	>=dev-libs/libusb-1.0.0
-	dev-util/gtk-doc"
+	doc? ( dev-util/gtk-doc )
+	pam? ( virtual/pam )"
 
 src_unpack() {
 	git_src_unpack
@@ -25,6 +27,11 @@ src_unpack() {
 	eautoreconf
 }
 
-src_install() {
-	emake DESTDIR="${D}" install || die "install failed"
+src_compile() {
+	econf --libdir=/ \
+		$(use_enable doc gtk-doc-html) \
+		$(use_enable pam) \
+		$(use_enable static) || die "configuration failed"
+	emake || die "make failed"
+	rm pam/pam_${PN}.la -f
 }

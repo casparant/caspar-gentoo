@@ -6,16 +6,16 @@ EGIT_REPO_URI="git://github.com/dsd/pam_fprint.git"
 
 inherit git eutils autotools
 
-DESCRIPTION="pam_fprint"
+DESCRIPTION="PAM module using libfprint's fingerprint for authentication"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Pam_fprint"
 SRC_URI=""
 
-LICENSE="LGPL-2"
+LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE=""
 
-DEPEND="=sys-auth/libfprint-9999
+DEPEND=">=media-libs/libfprint-0.1.0_pre
 	sys-libs/pam"
 
 src_unpack() {
@@ -23,8 +23,4 @@ src_unpack() {
 	cd "${S}"
 	./autogen.sh
 	eautoreconf
-}
-
-src_install() {
-	emake DESTDIR="${D}" install || "emake install failed"
 }

@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-DESCRIPTION="pam_fprint"
+DESCRIPTION="PAM module using libfprint's fingerprint for authentication"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Pam_fprint"
 SRC_URI="mirror://sourceforge/fprint/${P}.tar.bz2"
 
@@ -11,10 +11,5 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE=""
 
-DEPEND="sys-auth/libfprint
+DEPEND="media-libs/libfprint
 	sys-libs/pam"
-
-src_install() {
-	emake DESTDIR="${D}" install
-}
-

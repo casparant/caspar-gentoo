@@ -4,7 +4,7 @@
 
 EAPI=3
 
-inherit qt4
+inherit qt4 pam
 
 DESCRIPTION="Use Fingerprint Devices with Linux"
 HOMEPAGE="http://www.n-view.net/Appliance/fingerprint/"
@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="x86 amd64"
 IUSE="upek"
 
-DEPEND=">=sys-auth/libfprint-0.1.0_pre2
+DEPEND=">=media-libs/libfprint-0.1.0_pre2
 x11-libs/libfakekey
 >=app-crypt/qca-2.0.0
 >=app-crypt/qca-gnupg-2.0.0_beta
@@ -38,14 +38,14 @@ src_configure() {
 
 src_install() {
 	into /usr/local
-	dobin bin/fingerprint-gui/fingerprint-gui 
+	dobin bin/fingerprint-gui/fingerprint-gui
 	dobin bin/fingerprint-helper/fingerprint-helper
 	dobin bin/fingerprint-identifier/fingerprint-identifier
 	dobin bin/fingerprint-plugin/fingerprint-plugin
 	dobin bin/fingerprint-suid/fingerprint-suid
 	fperms u+s /usr/local/bin/fingerprint-suid
 	insinto /$(get_libdir)/security
-	newins bin/fingerprint-pam/libpam_fingerprint-gui.so pam_fingerprint-gui.so
+	dopammod bin/fingerprint-pam/libpam_fingerprint-gui.so pam_fingerprint-gui.so
 	domenu bin/fingerprint-gui/fingerprint-gui.desktop
 	dodoc CHANGELOG COPYING \
 		Hacking.pdf IMPORTANT-UPGRADE-INFORMATION.txt Install-step-by-step.pdf
