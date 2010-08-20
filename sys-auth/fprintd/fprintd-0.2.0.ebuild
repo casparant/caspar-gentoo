@@ -27,7 +27,7 @@ src_compile() {
 		$(use_enable pam) \
 		$(use_enable static) || die "configuration failed"
 	emake || die "make failed"
-	rm pam/pam_${PN}.la -f
+	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
 }
 
 src_install() {

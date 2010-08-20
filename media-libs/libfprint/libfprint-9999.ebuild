@@ -33,6 +33,7 @@ src_compile(){
 		|| die "configuration failed"
 
 	emake || die "make failed"
+	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
 }
 
 src_install() {
