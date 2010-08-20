@@ -11,7 +11,7 @@ SRC_URI="http://freedesktop.org/~hadess/${P}.tar.bz2"
 LICENSE="LGPL-2.1"
 SLOT="0"
 KEYWORDS="~x86 ~amd64"
-IUSE=""
+IUSE="-static -example -x11-example"
 
 DEPEND=">=dev-libs/libusb-1.0.0
 	media-gfx/imagemagick"

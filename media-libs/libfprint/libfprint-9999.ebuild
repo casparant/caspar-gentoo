@@ -14,6 +14,7 @@ SRC_URI=""
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="~x86 ~amd64"
+IUSE="-static -example -x11-example"
 
 DEPEND="media-gfx/imagemagick
 	>=dev-libs/libusb-1.0.0"
