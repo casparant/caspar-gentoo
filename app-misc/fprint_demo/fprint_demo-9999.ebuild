@@ -6,7 +6,7 @@ EGIT_REPO_URI="git://github.com/dsd/${PN}.git"
 
 inherit git eutils autotools
 
-DESCRIPTION="fprint_demo"
+DESCRIPTION="GTK+ app to demonstrate and test libfprint capabilities"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Fprint_demo"
 SRC_URI=""
 
@@ -15,7 +15,7 @@ SLOT="0"
 KEYWORDS="~x86 ~amd64"
 IUSE=""
 
-DEPEND="sys-auth/libfprint
+DEPEND="=media-libs/libfprint-9999
 	>=x11-libs/gtk+-2"
 
 src_unpack() {
@@ -23,8 +23,4 @@ src_unpack() {
 	cd "${S}"
 	./autogen.sh
 	eautoreconf
-}
-
-src_install() {
-	emake DESTDIR="${D}" install || "emake install failed"
 }
