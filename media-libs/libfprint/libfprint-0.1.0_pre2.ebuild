@@ -12,7 +12,7 @@ SRC_URI="mirror://sourceforge/fprint/${MY_P}.tar.bz2"
 LICENSE="LGPL-2.1"
 SLOT="0"
 KEYWORDS="~x86 ~amd64"
-IUSE=""
+IUSE="-static -example -x11-example"
 
 DEPEND=">=dev-libs/libusb-1.0.0
 	media-gfx/imagemagick"
@@ -22,7 +22,15 @@ S="${WORKDIR}/${MY_P}"
 src_unpack() {
 	unpack "${A}"
 	cd "${S}"
-	eautoreconf
+}
+
+src_compile(){
+	econf $(use_enable static) \
+		$(use_enable example examples-build) \
+		$(use_enable x11-example x11-examples-build) \
+		|| die "configuration failed"
+
+	emake || die "make failed"
 }
 
 src_install() {
