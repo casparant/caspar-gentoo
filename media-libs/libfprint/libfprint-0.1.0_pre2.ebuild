@@ -24,3 +24,7 @@ src_unpack() {
 	cd "${S}"
 	eautoreconf
 }
+
+src_install() {
+	emake DESTDIR="${D}" install || die "install failed"
+}

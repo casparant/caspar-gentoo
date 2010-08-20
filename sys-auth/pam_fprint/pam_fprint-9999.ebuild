@@ -24,3 +24,7 @@ src_unpack() {
 	./autogen.sh
 	eautoreconf
 }
+
+src_install() {
+	emake DESTDIR="${D}" install || die "install failed"
+}

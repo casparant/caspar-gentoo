@@ -13,3 +13,7 @@ IUSE=""
 
 DEPEND="media-libs/libfprint
 	>=x11-libs/gtk+-2"
+
+src_install() {
+	emake DESTDIR="${D}" install || die "install failed"
+}

@@ -13,3 +13,7 @@ IUSE=""
 
 DEPEND="media-libs/libfprint
 	sys-libs/pam"
+
+src_install() {
+	emake DESTDIR="${D}" install || die "install failed"
+}

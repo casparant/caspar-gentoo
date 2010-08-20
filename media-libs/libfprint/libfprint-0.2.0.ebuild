@@ -15,3 +15,7 @@ IUSE=""
 
 DEPEND=">=dev-libs/libusb-1.0.0
 	media-gfx/imagemagick"
+
+src_install() {
+	emake DESTDIR="${D}" install || die "install failed"
+}
