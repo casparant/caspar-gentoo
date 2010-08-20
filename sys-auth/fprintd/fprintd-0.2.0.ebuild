@@ -29,3 +29,7 @@ src_compile() {
 	emake || die "make failed"
 	rm pam/pam_${PN}.la -f
 }
+
+src_install() {
+	emake DESTDIR="${D}" install || die "install failed"
+}
