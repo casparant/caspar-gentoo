@@ -27,9 +27,18 @@ src_compile() {
 		$(use_enable pam) \
 		$(use_enable static) || die "configuration failed"
 	emake || die "make failed"
-	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
 }
 
 src_install() {
 	emake DESTDIR="${D}" install || die "install failed"
+	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
+}
+
+pkg_postinst() {
+	if use pam; then
+		einfo "You must add one line to /etc/pam.d/system-auth to enable PAM"
+		einfo "module:"
+		einfo "auth        sufficient  pam_fprintd.so"
+		einfo ""
+	fi
 }
