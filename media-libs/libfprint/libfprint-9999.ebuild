@@ -7,7 +7,7 @@ inherit git eutils autotools
 #EGIT_REPO_URI="git://github.com/dsd/libfprint.git"
 EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}"
 
-DESCRIPTION="libfprint"
+DESCRIPTION="a library designed to support fingerprint readers, updated version"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
 SRC_URI=""
 
@@ -23,8 +23,4 @@ src_unpack() {
 	cd "${S}"
 	./autogen.sh
 	eautoreconf
-}
-
-src_install() {
-	emake DESTDIR="${D}" install || die "install failed"
 }

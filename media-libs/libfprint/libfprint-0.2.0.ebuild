@@ -4,10 +4,9 @@
 
 inherit eutils
 
-MY_P=${P/_/-}
-DESCRIPTION="a library designed to support fingerprint readers"
+DESCRIPTION="a library designed to support fingerprint readers, updated version"
 HOMEPAGE="http://www.reactivated.net/fprint/wiki/Libfprint"
-SRC_URI="mirror://sourceforge/fprint/${MY_P}.tar.bz2"
+SRC_URI="http://freedesktop.org/~hadess/${P}.tar.bz2"
 
 LICENSE="LGPL-2.1"
 SLOT="0"
@@ -16,11 +15,3 @@ IUSE=""
 
 DEPEND=">=dev-libs/libusb-1.0.0
 	media-gfx/imagemagick"
-
-S="${WORKDIR}/${MY_P}"
-
-src_unpack() {
-	unpack "${A}"
-	cd "${S}"
-	eautoreconf
-}
