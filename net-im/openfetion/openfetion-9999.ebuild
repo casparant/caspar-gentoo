@@ -5,9 +5,9 @@
 
 EAPI="2"
 
-ESVN_REPO_URI="http://ofetion.googlecode.com/svn/trunk/"
 inherit flag-o-matic subversion gnome2 eutils
 
+ESVN_REPO_URI="http://ofetion.googlecode.com/svn/trunk/"
 DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
 SRC_URI=""
