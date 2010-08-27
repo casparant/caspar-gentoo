@@ -6,7 +6,7 @@
 EAPI="2"
 
 ESVN_REPO_URI="http://ofetion.googlecode.com/svn/trunk/"
-inherit flag-o-matic subversion
+inherit flag-o-matic subversion gnome2 eutils
 
 DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
@@ -30,21 +30,23 @@ src_configure() {
 	use debug && myconf="${myconf} --enable-debug"
 	econf ${myconf}
 }
-src_install() {
-#	einstall
-#clean up the makefiles unwanted
-	rm skin/face_images/Makefile* skin/Makefile* resource/Makefile*
-#without gstreamer , newmessage.wav is useless
-	use gstreamer || rm resource/newmessage.wav
+#src_install() {
+##	einstall
+##clean up the makefiles unwanted
+#	rm skin/face_images/Makefile* skin/Makefile* resource/Makefile*
+##without gstreamer , newmessage.wav is useless
+#	use gstreamer || rm resource/newmessage.wav
+#
+#	insinto /usr/share/openfetion
+#	doins -r skin resource || die
+#
+#	insinto /usr/share/applications
+#	doins resource/openfetion.desktop || die
+#
+#	dobin src/${PN} || die
+#}
 
-	insinto /usr/share/openfetion
-	doins -r skin resource || die
-
-	insinto /usr/share/applications
-	doins resource/openfetion.desktop || die
-
-	dobin src/${PN} || die
-
+pkg_postinst() {
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
 	einfo "and compile it again."
