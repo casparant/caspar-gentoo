@@ -17,7 +17,7 @@ IUSE="-static -doc pam"
 
 DEPEND=">=dev-libs/libusb-1.0.0
 	>=media-libs/libfprint-0.2.0
-	doc? ( dev-util/gtk-doc )
+	dev-util/gtk-doc
 	pam? ( virtual/pam !sys-auth/pam_fprint )"
 RDEPEND="${DEPEND}"
 
