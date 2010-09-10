@@ -28,8 +28,8 @@ DEPEND="dev-lang/perl[ithreads]
 RDEPEND="${DEPEND}"
 
 src_install() {
-	epatch "${FILESDIR}/401-unauthorised.patch"
-	dobin checkgmail || die "dobin failed"
+	dobin ${PN} || die "dobin failed"
 	dodoc ChangeLog Readme todo
-	doman man/checkgmail.1.gz
+	doman man/${PN}.1.gz
+	domenu ${FILESDIR}/${PN}.desktop
 }
