@@ -28,8 +28,11 @@ DEPEND="dev-lang/perl[ithreads]
 RDEPEND="${DEPEND}"
 
 src_install() {
+	epatch ${FILESDIR}/401-unauthorised.patch
 	dobin ${PN} || die "dobin failed"
 	dodoc ChangeLog Readme todo
+	insinto /usr/share/pixmaps
+	doins ${FILESDIR}/${PN}.png
 	doman man/${PN}.1.gz
 	domenu ${FILESDIR}/${PN}.desktop
 }
