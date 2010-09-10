@@ -9,7 +9,6 @@ inherit eutils gnome2 virtualx autotools bzr
 
 EBZR_CACHE_DIR="nautilus-elementary-2.30"
 EBZR_REPO_URI="lp:nautilus-elementary/2.30"
-EPATCH_OPTS="-p1 -d ${P}"
 
 DESCRIPTION="A file manager for the GNOME desktop"
 HOMEPAGE="http://www.gnome.org/projects/nautilus/"
@@ -90,8 +89,6 @@ src_prepare() {
 	# Fix nautilus flipping-out with --no-desktop -- bug 266398
 	epatch "${FILESDIR}/${PN}-2.27.4-change-reg-desktop-file-with-no-desktop.patch"
 
-	# Do not show Unmount when showing Eject/Safe removal
-	epatch "${FILESDIR}/${P}-unmount-entries.patch"
 }
 
 src_test() {
