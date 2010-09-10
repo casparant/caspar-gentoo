@@ -9,6 +9,7 @@ inherit eutils gnome2 virtualx autotools bzr
 
 EBZR_CACHE_DIR="nautilus-elementary-2.30"
 EBZR_REPO_URI="lp:nautilus-elementary/2.30"
+EPATCH_OPTS="-p1 -d ${P}"
 
 DESCRIPTION="A file manager for the GNOME desktop"
 HOMEPAGE="http://www.gnome.org/projects/nautilus/"
