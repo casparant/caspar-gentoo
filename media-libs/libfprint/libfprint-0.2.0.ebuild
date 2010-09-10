@@ -2,6 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
+EAPI=3
+
 inherit eutils
 
 DESCRIPTION="a library designed to support fingerprint readers, updated version"
