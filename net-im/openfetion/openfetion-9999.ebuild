@@ -27,7 +27,6 @@ RDEPEND=${DEPEND}
 
 src_unpack() {
 	subversion_src_unpack
-	unpack ${A}
 }
 
 src_prepare() {
