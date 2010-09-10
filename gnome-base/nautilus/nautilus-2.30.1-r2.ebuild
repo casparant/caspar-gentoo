@@ -89,6 +89,8 @@ src_prepare() {
 	# Fix nautilus flipping-out with --no-desktop -- bug 266398
 	epatch "${FILESDIR}/${PN}-2.27.4-change-reg-desktop-file-with-no-desktop.patch"
 
+	# Do not show Unmount when showing Eject/Safe removal
+	epatch "${FILESDIR}/${P}-unmount-entries.patch"
 }
 
 src_test() {
