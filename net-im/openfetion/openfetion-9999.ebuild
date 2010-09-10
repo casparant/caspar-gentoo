@@ -24,6 +24,12 @@ DEPEND="gstreamer? ( media-libs/gstreamer )
 		>=x11-libs/gtk+-2.16.6
 		dev-libs/libxml2"
 RDEPEND=${DEPEND}
+
+src_unpack() {
+	subversion_src_unpack
+	unpack ${A}
+}
+
 src_prepare() {
 	epatch_user
 }
