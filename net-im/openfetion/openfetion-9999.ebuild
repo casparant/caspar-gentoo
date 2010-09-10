@@ -11,11 +11,12 @@ ESVN_REPO_URI="http://ofetion.googlecode.com/svn/trunk/"
 DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
 SRC_URI=""
+RESTRICT="mirror"
 
-LICENSE="GPL-v2"
+LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="x86 amd64"
-IUSE="-gstreamer -notify -debug"
+KEYWORDS="~x86 amd64"
+IUSE="+vanilla -gstreamer -notify -debug"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
@@ -23,30 +24,27 @@ DEPEND="gstreamer? ( media-libs/gstreamer )
 		>=x11-libs/gtk+-2.16.6
 		dev-libs/libxml2"
 RDEPEND=${DEPEND}
+src_prepare() {
+	epatch_user
+}
 
 src_configure() {
-	use notify || sed -i 's/-lnotify//' src/Makefile.{am,in}
 	local myconf=""
 	use debug && myconf="${myconf} --enable-debug"
 	econf ${myconf}
 }
-#src_install() {
-##	einstall
-##clean up the makefiles unwanted
-#	rm skin/face_images/Makefile* skin/Makefile* resource/Makefile*
-##without gstreamer , newmessage.wav is useless
-#	use gstreamer || rm resource/newmessage.wav
-#
-#	insinto /usr/share/openfetion
-#	doins -r skin resource || die
-#
-#	insinto /usr/share/applications
-#	doins resource/openfetion.desktop || die
-#
-#	dobin src/${PN} || die
-#}
+src_install() {
+#	einstall
+	emake DESTDIR="${D}" install || die "Install failed"
 
-pkg_postinst() {
+#   do some cleanup
+
+#clean up the makefiles unwanted
+	rm ${D}/usr/share/openfetion/skin/face_images/Makefile{,.in,.am}
+
+#without gstreamer , newmessage.wav is useless
+	use gstreamer || rm "${D}/usr/share/openfetion/resource/newmessage.wav"
+
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
 	einfo "and compile it again."
