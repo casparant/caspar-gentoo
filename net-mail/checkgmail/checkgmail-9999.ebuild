@@ -9,7 +9,7 @@ inherit eutils subversion
 DESCRIPTION="a Gmail Notifier for Linux"
 HOMEPAGE="http://checkgmail.sourceforge.net/"
 SRC_URI=""
-ESVN_REPO_URI="https://${PN}.svn.sourceforge.net/svnroot/${PN}"
+ESVN_REPO_URI="http://${PN}.svn.sourceforge.net/svnroot/${PN}"
 
 LICENSE="GPL-2"
 SLOT="0"
