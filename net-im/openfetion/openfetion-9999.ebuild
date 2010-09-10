@@ -30,7 +30,7 @@ src_unpack() {
 }
 
 src_prepare() {
-	epatch_user
+	epatch ${FILESDIR}/${PN}-gentoo-qa-warning.patch
 }
 
 src_configure() {
