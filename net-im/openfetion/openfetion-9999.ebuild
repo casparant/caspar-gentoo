@@ -29,10 +29,6 @@ src_unpack() {
 	subversion_src_unpack
 }
 
-src_prepare() {
-	epatch ${FILESDIR}/${PN}-gentoo-qa-warning.patch
-}
-
 src_configure() {
 	local myconf=""
 	use debug && myconf="${myconf} --enable-debug"
@@ -53,6 +49,6 @@ src_install() {
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
 	einfo "and compile it again."
-	einfo "v1.6 has some new feature, you might need to clean some data"
+	einfo "v1.8 has some new feature, you might need to clean some data"
 	einfo "cd ~/.openfetion && rm global.dat && find . -name "config.dat" -exec rm {} \;;"
 }
