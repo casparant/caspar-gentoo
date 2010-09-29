@@ -25,7 +25,6 @@ RDEPEND=">=dev-libs/glib-2.16
 	sys-power/upower
 	elibc_FreeBSD? ( dev-libs/libexecinfo )
 
-	x11-libs/gdk-pixbuf
 	x11-libs/libSM
 	x11-libs/libICE
 	x11-libs/libX11
