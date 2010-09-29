@@ -7,8 +7,8 @@ GCONF_DEBUG="no"
 
 inherit eutils gnome2 virtualx autotools bzr
 
-EBZR_CACHE_DIR="nautilus-elementary-2.30"
-EBZR_REPO_URI="lp:nautilus-elementary/2.30"
+EBZR_CACHE_DIR="nautilus-elementary"
+EBZR_REPO_URI="lp:nautilus-elementary"
 
 DESCRIPTION="A file manager for the GNOME desktop"
 HOMEPAGE="http://www.gnome.org/projects/nautilus/"
