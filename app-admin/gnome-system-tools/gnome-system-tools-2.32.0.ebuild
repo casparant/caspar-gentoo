@@ -17,7 +17,7 @@ IUSE="nfs policykit samba"
 
 RDEPEND="
 	>=app-admin/system-tools-backends-2.9.4
-	>=dev-libs/liboobs-2.29.91
+	>=dev-libs/liboobs-2.31.91
 	>=x11-libs/gtk+-2.18:2
 	>=dev-libs/glib-2.15.2:2
 	>=gnome-base/gconf-2.2
