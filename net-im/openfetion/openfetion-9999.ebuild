@@ -37,6 +37,7 @@ src_configure() {
 src_install() {
 #	einstall
 	emake DESTDIR="${D}" install || die "Install failed"
+	emake DESTDIR="${D}" -C po install || die "Install tranlation files failed"
 
 #   do some cleanup
 
