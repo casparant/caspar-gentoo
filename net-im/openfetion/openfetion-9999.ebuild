@@ -17,12 +17,7 @@ LANGS="zh"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-<<<<<<< HEAD
-IUSE_LINGUAS="en zh_CN"
-IUSE="+nls +vanilla -gstreamer -notify -debug ${IUSE_LINGUAS// / linguas_}"
-=======
-IUSE="+vanilla -gstreamer -notify -debug"
->>>>>>> parent of 49f2508... update openfetion
+IUSE="+nls +vanilla -gstreamer -notify -debug"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
@@ -40,17 +35,9 @@ src_configure() {
 	use debug && myconf="${myconf} --enable-debug"
 	econf ${myconf}
 }
-
 src_install() {
-	local X
-	for X in ${ISUE_LINGUAS}; do
-		if use linguas_${X}; then
-			export LINGUAS="$LINGUAS ${X}"
-		fi
-	done
 #	einstall
 	emake DESTDIR="${D}" install || die "Install failed"
-#	emake DESTDIR="${D}" -C po install || die "Install tranlation files failed"
 
 #   do some cleanup
 
