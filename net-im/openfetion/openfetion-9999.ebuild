@@ -16,7 +16,8 @@ RESTRICT="mirror"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE="+nls +vanilla -gstreamer -notify -debug"
+IUSE_LINGUAS=(en zh_CN)
+IUSE="+nls +vanilla -gstreamer -notify -debug ${IUSE_LINGUAS// / linguas_}"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
@@ -32,7 +33,14 @@ src_unpack() {
 src_configure() {
 	econf $(use_enable nls) $(use_enable debug)
 }
+
 src_install() {
+	local X
+	for X in ${ISUE_LINGUAS}; do
+		if use linguas_${X}; then
+			export LINGUAS="$LINGUAS ${X}"
+		fi
+	done
 #	einstall
 	emake DESTDIR="${D}" install || die "Install failed"
 
