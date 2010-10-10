@@ -16,7 +16,7 @@ RESTRICT="mirror"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE_LINGUAS=(en zh_CN)
+IUSE_LINGUAS="en zh_CN"
 IUSE="+nls +vanilla -gstreamer -notify -debug ${IUSE_LINGUAS// / linguas_}"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
