@@ -12,7 +12,7 @@ DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
 SRC_URI=""
 RESTRICT="mirror"
-LINGUAS="zh"
+LANGS="zh"
 
 LICENSE="GPL-2"
 SLOT="0"
