@@ -12,12 +12,11 @@ DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
 SRC_URI=""
 RESTRICT="mirror"
-LANGS="zh"
 
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE="+vanilla -gstreamer -notify -debug"
+IUSE="+nls +vanilla -gstreamer -notify -debug"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
@@ -31,14 +30,11 @@ src_unpack() {
 }
 
 src_configure() {
-	local myconf=""
-	use debug && myconf="${myconf} --enable-debug"
-	econf ${myconf}
+	econf $(use_enable nls) $(use_enable debug)
 }
 src_install() {
 #	einstall
 	emake DESTDIR="${D}" install || die "Install failed"
-#	emake DESTDIR="${D}" -C po install || die "Install tranlation files failed"
 
 #   do some cleanup
 
