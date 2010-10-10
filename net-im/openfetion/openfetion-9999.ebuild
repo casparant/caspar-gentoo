@@ -12,6 +12,7 @@ DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
 SRC_URI=""
 RESTRICT="mirror"
+LINGUAS="zh"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -37,7 +38,7 @@ src_configure() {
 src_install() {
 #	einstall
 	emake DESTDIR="${D}" install || die "Install failed"
-	emake DESTDIR="${D}" -C po install || die "Install tranlation files failed"
+#	emake DESTDIR="${D}" -C po install || die "Install tranlation files failed"
 
 #   do some cleanup
 
