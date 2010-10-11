@@ -17,7 +17,7 @@ SRC_URI="!elementary? ( ${SRC_URI} )"
 LICENSE="GPL-2 LGPL-2 FDL-1.1"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~ppc ~ppc64 ~sh ~sparc ~x86 ~x86-fbsd ~x86-interix ~amd64-linux ~x86-linux"
-IUSE="doc gnome +introspection xmp"
+IUSE="doc gnome +introspection xmp elementary"
 
 RDEPEND=">=dev-libs/glib-2.25.9
 	>=gnome-base/gnome-desktop-2.29.91:0
