@@ -14,5 +14,6 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE=""
 
-DEPEND=""
+DEPEND="
+>=dev-libs/glib-2.27.0-r1"
 RDEPEND="${DEPEND}"
