@@ -31,7 +31,7 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	ln -sf $(type -P true) py-compile || die "replacing py-compile failed"
-	epatch "${FILESDIR}/${P}-rdflib-3.patch"
+#	epatch "${FILESDIR}/${P}-rdflib-3.patch"
 }
 
 src_configure() {
