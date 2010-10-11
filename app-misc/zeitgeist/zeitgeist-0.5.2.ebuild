@@ -23,7 +23,8 @@ RDEPEND="sys-apps/dbus
 	dev-python/gconf-python
 	dev-python/pyxdg
 	dev-python/pygtk
-	>=dev-python/rdflib-3"
+	>=dev-python/rdflib-3
+	media-libs/raptor"
 DEPEND="${RDEPEND}
 	dev-util/intltool
 	sys-devel/gettext
