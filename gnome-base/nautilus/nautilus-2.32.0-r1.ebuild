@@ -30,7 +30,7 @@ RDEPEND=">=dev-libs/glib-2.25.9
 	x11-libs/libXext
 	x11-libs/libXrender
 	introspection? ( >=dev-libs/gobject-introspection-0.6.4 )
-	elementary? ( app-misc/zeitgeist )
+	elementary? ( dev-libs/libzeitgeist )
 	xmp? ( >=media-libs/exempi-2 )"
 
 DEPEND="${RDEPEND}
