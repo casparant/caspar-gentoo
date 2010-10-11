@@ -17,3 +17,8 @@ IUSE=""
 DEPEND="
 >=dev-libs/glib-2.27.0-r1"
 RDEPEND="${DEPEND}"
+
+src_install() {
+	emake DESTDIR="${D}" install || die "install failed"
+	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
+}
