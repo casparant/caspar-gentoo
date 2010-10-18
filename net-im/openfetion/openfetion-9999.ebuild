@@ -17,11 +17,11 @@ LANGS="zh"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE="nls +vanilla gstreamer notify screensaver -debug"
+IUSE="nls +vanilla gstreamer notify +screensaver -debug"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
-		screensaver? ( x11-libs/libXScrnSaver )
+		xscreensaver? ( x11-libs/libXScrnSaver )
 		dev-libs/openssl
 		>=x11-libs/gtk+-2.16.6
 		dev-libs/libxml2"
@@ -35,7 +35,7 @@ src_configure() {
 	econf $(use_enable nls) \
 		$(use_enable gstreamer) \
 		$(use_enable notify) \
-		$(use_enable screensaver) \
+		$(use_enable xscreensaver screensaver) \
 		$(use_enable debug)
 }
 src_install() {
