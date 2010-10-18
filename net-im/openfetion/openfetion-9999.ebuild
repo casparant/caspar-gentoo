@@ -17,10 +17,11 @@ LANGS="zh"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE="+nls +vanilla -gstreamer -notify -debug"
+IUSE="nls +vanilla gstreamer notify screensaver -debug"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
+		screensaver? ( x11-libs/libXScrnSaver )
 		dev-libs/openssl
 		>=x11-libs/gtk+-2.16.6
 		dev-libs/libxml2"
@@ -31,18 +32,15 @@ src_unpack() {
 }
 
 src_configure() {
-	local myconf=""
-	use debug && myconf="${myconf} --enable-debug"
-	econf ${myconf}
+	econf $(use_enable nls) \
+		$(use_enable gstreamer) \
+		$(use_enable notify) \
+		$(use_enable screensaver) \
+		$(use_enable debug)
 }
 src_install() {
 #	einstall
 	emake DESTDIR="${D}" install || die "Install failed"
-
-#   do some cleanup
-
-#clean up the makefiles unwanted
-	rm ${D}/usr/share/openfetion/skin/face_images/Makefile{,.in,.am}
 
 #without gstreamer , newmessage.wav is useless
 	use gstreamer || rm "${D}/usr/share/openfetion/resource/newmessage.wav"
@@ -50,6 +48,6 @@ src_install() {
 	einfo ""
 	einfo "To use the sound reminder function, please enable gstreamer USE flag"
 	einfo "and compile it again."
-	einfo "v1.8 has some new feature, you might need to clean some data"
+	einfo "Since v1.8 has some new feature, you might need to clean some data"
 	einfo "cd ~/.openfetion && rm global.dat && find . -name "config.dat" -exec rm {} \;;"
 }
