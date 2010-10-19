@@ -17,7 +17,7 @@ LANGS="zh"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE="nls +vanilla gstreamer notify +screensaver -debug"
+IUSE="nls +vanilla gstreamer notify +xscreensaver -debug"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
