@@ -17,11 +17,12 @@ LANGS="zh"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE="nls +vanilla gstreamer notify +xscreensaver -debug"
+IUSE="nls +vanilla gstreamer notify +xscreensaver networkmanager -debug"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		notify? ( x11-libs/libnotify )
 		xscreensaver? ( x11-libs/libXScrnSaver )
+		networkmanager? ( net-misc/networkmanager )
 		dev-libs/openssl
 		>=x11-libs/gtk+-2.16.6
 		>=dev-db/sqlite-3.3.17
@@ -30,14 +31,20 @@ RDEPEND=${DEPEND}
 
 src_unpack() {
 	subversion_src_unpack
+	epatch "${FILESDIR}"/${PN}-fix-configure_ac.patch
+	rm -f "${S}"/configure
+}
+
+src_prepare() {
+	eautoreconf
 }
 
 src_configure() {
-	autoreconf
 	econf $(use_enable nls) \
 		$(use_enable gstreamer) \
 		$(use_enable notify) \
 		$(use_enable xscreensaver screensaver) \
+		$(use_enable networkmanager nm) \
 		$(use_enable debug)
 }
 src_install() {
