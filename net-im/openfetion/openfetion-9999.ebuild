@@ -33,6 +33,8 @@ src_unpack() {
 }
 
 src_prepare() {
+	echo "${S}"
+	rm ${S}/configure
 	eautoreconf
 }
 
