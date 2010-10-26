@@ -31,11 +31,11 @@ RDEPEND=${DEPEND}
 
 src_unpack() {
 	subversion_src_unpack
-	epatch "${FILESDIR}"/${PN}-fix-configure_ac.patch
-	rm -f "${S}"/configure
 }
 
 src_prepare() {
+	epatch "${FILESDIR}"/${PN}-fix-configure_ac.patch
+	rm -f "${S}"/configure
 	eautoreconf
 }
 
