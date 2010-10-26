@@ -24,6 +24,7 @@ DEPEND="gstreamer? ( media-libs/gstreamer )
 		xscreensaver? ( x11-libs/libXScrnSaver )
 		dev-libs/openssl
 		>=x11-libs/gtk+-2.16.6
+		>=dev-db/sqlite-3.3.17
 		dev-libs/libxml2"
 RDEPEND=${DEPEND}
 
@@ -32,6 +33,7 @@ src_unpack() {
 }
 
 src_configure() {
+	eautoreconf
 	econf $(use_enable nls) \
 		$(use_enable gstreamer) \
 		$(use_enable notify) \
