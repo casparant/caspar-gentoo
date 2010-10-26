@@ -1,5 +1,5 @@
---- openfetion/configure.ac	2010-10-27 00:28:36.226000028 +0800
-+++ openfetion.bak/configure.ac	2010-10-27 03:09:42.572000028 +0800
+--- a/configure.ac	2010-10-27 00:28:36.226000028 +0800
++++ b/configure.ac	2010-10-27 03:09:42.572000028 +0800
 @@ -38,31 +38,31 @@
  AC_CHECK_HEADERS([arpa/inet.h fcntl.h netdb.h netinet/in.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h unistd.h])
  
