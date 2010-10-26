@@ -32,8 +32,11 @@ src_unpack() {
 	subversion_src_unpack
 }
 
-src_configure() {
+src_prepare() {
 	eautoreconf
+}
+
+src_configure() {
 	econf $(use_enable nls) \
 		$(use_enable gstreamer) \
 		$(use_enable notify) \
