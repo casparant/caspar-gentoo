@@ -34,7 +34,6 @@ src_unpack() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-fix-configure_ac.patch
 	rm -f "${S}"/configure
 	eautoreconf
 }
