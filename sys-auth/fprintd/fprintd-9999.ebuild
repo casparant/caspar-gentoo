@@ -14,10 +14,10 @@ SRC_URI=""
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE="-static -doc pam"
 
-DEPEND=">=media-libs/libfprint-0.2.0
+DEPEND=">=sys-auth/libfprint-9999
 	>=dev-libs/libusb-1.0.0
 	dev-util/gtk-doc
 	pam? ( virtual/pam !sys-auth/pam_fprint )"
@@ -29,17 +29,17 @@ src_unpack() {
 	eautoreconf
 }
 
-src_compile() {
+src_configure() {
 	econf --libdir=/lib \
 		$(use_enable doc gtk-doc-html) \
 		$(use_enable pam) \
-		$(use_enable static) || die "configuration failed"
-	emake || die "make failed"
+		$(use_enable static) || die
 }
 
 src_install() {
-	emake DESTDIR="${D}" install || die "install failed"
+	emake DESTDIR="${D}" install || die
 	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
+	dodoc AUTHORS ChangeLog NEWS README || die
 }
 
 pkg_postinst() {

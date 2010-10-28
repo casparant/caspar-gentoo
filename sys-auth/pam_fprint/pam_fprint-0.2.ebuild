@@ -8,12 +8,13 @@ SRC_URI="mirror://sourceforge/fprint/${P}.tar.bz2"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE=""
 
-DEPEND="media-libs/libfprint
+DEPEND="sys-auth/libfprint
 	sys-libs/pam"
 
 src_install() {
-	emake DESTDIR="${D}" install || die "install failed"
+	emake DESTDIR="${D}" install || die
+	dodoc AUTHORS ChangeLog NEWS README || die
 }

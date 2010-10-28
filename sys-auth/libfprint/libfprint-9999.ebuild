@@ -15,8 +15,8 @@ SRC_URI=""
 
 LICENSE="LGPL-2"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
-IUSE="-static -example -x11-example"
+KEYWORDS="~amd64"
+IUSE="-static"
 
 DEPEND="media-gfx/imagemagick
 	>=dev-libs/libusb-1.0.0"
@@ -28,16 +28,12 @@ src_unpack() {
 	eautoreconf
 }
 
-src_compile(){
-	econf $(use_enable static) \
-		$(use_enable example examples-build) \
-		$(use_enable x11-example x11-examples-build) \
-		|| die "configuration failed"
-
-	emake || die "make failed"
+src_configure() {
+	econf $(use_enable static) || die
 }
 
 src_install() {
-	emake DESTDIR="${D}" install || die "install failed"
+	emake DESTDIR="${D}" install || die
+	dodoc AUTHORS ChangeLog NEWS README || die
 	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
 }
