@@ -12,10 +12,10 @@ SRC_URI=""
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE=""
 
-DEPEND=">=media-libs/libfprint-0.1.0_pre
+DEPEND=">=sys-auth/libfprint-9999
 	sys-libs/pam"
 
 src_unpack() {
@@ -26,5 +26,6 @@ src_unpack() {
 }
 
 src_install() {
-	emake DESTDIR="${D}" install || die "install failed"
+	emake DESTDIR="${D}" install || die
+	dodoc AUTHORS ChangeLog NEWS README || die
 }
