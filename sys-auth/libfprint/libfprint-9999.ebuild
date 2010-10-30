@@ -34,6 +34,6 @@ src_configure() {
 
 src_install() {
 	emake DESTDIR="${D}" install || die
-	dodoc AUTHORS ChangeLog NEWS README || die
+	dodoc AUTHORS COPYING HACKING NEWS README THANKS || die
 	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
 }
