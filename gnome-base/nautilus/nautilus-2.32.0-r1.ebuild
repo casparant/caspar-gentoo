@@ -20,7 +20,7 @@ KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~ppc ~ppc64 ~sh ~sparc ~x86 ~x86-fbsd ~
 IUSE="doc gnome +introspection xmp elementary"
 
 RDEPEND=">=dev-libs/glib-2.25.9
-	>=gnome-base/gnome-desktop-2.29.91:0
+	>=gnome-base/gnome-desktop-2.29.91:2
 	>=x11-libs/pango-1.1.2
 	>=x11-libs/gtk+-2.22:2[introspection?]
 	>=dev-libs/libxml2-2.4.7
