@@ -12,11 +12,15 @@ SRC_URI="http://launchpad.net/${PN}/trunk/${PV}/+download/${P}.tar.gz"
 LICENSE="LGPL v3"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE=""
+IUSE="+nogio"
 
 DEPEND="
 >=dev-libs/glib-2.27.0-r1"
 RDEPEND="${DEPEND}"
+
+src_configure() {
+	use nogio && econf "--enable-module=no"
+}
 
 src_install() {
 	emake DESTDIR="${D}" install || die "install failed"
