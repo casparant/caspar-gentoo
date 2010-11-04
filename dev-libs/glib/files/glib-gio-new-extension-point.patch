@@ -1,5 +1,22 @@
---- gio/gdesktopappinfo.c
-+++ gio/gdesktopappinfo.c
+From 41a32799fa223937e5e980ffb8c268b183c416e2 Mon Sep 17 00:00:00 2001
+From: Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
+Date: Wed, 18 Aug 2010 12:02:10 +0200
+Subject: [PATCH] gio: New extension point "gio-desktop-app-info-launch-handler"
+
+Add an extension point that gets a callback each time a GAppInfo
+is launched. The callback receives the GAppInfo, the list of URIs,
+the launch context, and the pid.
+---
+ gio/gdesktopappinfo.c |  123 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ gio/gdesktopappinfo.h |   31 ++++++++++++
+ gio/gio.symbols       |    1 +
+ gio/giomodule.c       |    3 +
+ 4 files changed, 157 insertions(+), 1 deletions(-)
+
+diff --git a/gio/gdesktopappinfo.c b/gio/gdesktopappinfo.c
+index 8aa8738..e703bf7 100644
+--- a/gio/gdesktopappinfo.c
++++ b/gio/gdesktopappinfo.c
 @@ -69,6 +69,12 @@ static GList *  get_all_desktop_entries_for_mime_type (const char       *base_mi
  static void     mime_info_cache_reload                (const char       *dir);
  static gboolean g_desktop_app_info_ensure_saved       (GDesktopAppInfo  *info,
@@ -161,8 +178,10 @@
 +  (* iface->on_launched) (launch_handler, app_info, uris, launch_ctx, pid);
 +}
 +
---- gio/gdesktopappinfo.h
-+++ gio/gdesktopappinfo.h
+diff --git a/gio/gdesktopappinfo.h b/gio/gdesktopappinfo.h
+index 48c9693..8e36f72 100644
+--- a/gio/gdesktopappinfo.h
++++ b/gio/gdesktopappinfo.h
 @@ -91,6 +91,37 @@ GType     g_desktop_app_info_lookup_get_type                   (void) G_GNUC_CON
  GAppInfo *g_desktop_app_info_lookup_get_default_for_uri_scheme (GDesktopAppInfoLookup *lookup,
                                                                  const char            *uri_scheme);
@@ -201,8 +220,10 @@
  G_END_DECLS
  
  #endif /* __G_DESKTOP_APP_INFO_H__ */
---- gio/gio.symbols
-+++ gio/gio.symbols
+diff --git a/gio/gio.symbols b/gio/gio.symbols
+index 4e13a55..a62758a 100644
+--- a/gio/gio.symbols
++++ b/gio/gio.symbols
 @@ -114,6 +114,7 @@ g_desktop_app_info_get_filename
  g_desktop_app_info_get_type G_GNUC_CONST
  g_desktop_app_info_get_is_hidden
@@ -211,8 +232,10 @@
  g_desktop_app_info_lookup_get_type G_GNUC_CONST
  g_desktop_app_info_lookup_get_default_for_uri_scheme
  #endif
---- gio/giomodule.c
-+++ gio/giomodule.c
+diff --git a/gio/giomodule.c b/gio/giomodule.c
+index e40b7ef..b0a5ab8 100644
+--- a/gio/giomodule.c
++++ b/gio/giomodule.c
 @@ -515,6 +515,9 @@ _g_io_modules_ensure_extension_points_registered (void)
  #ifdef G_OS_UNIX
        ep = g_io_extension_point_register (G_DESKTOP_APP_INFO_LOOKUP_EXTENSION_POINT_NAME);
