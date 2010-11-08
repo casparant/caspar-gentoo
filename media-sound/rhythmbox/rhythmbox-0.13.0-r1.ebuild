@@ -11,7 +11,7 @@ HOMEPAGE="http://www.rhythmbox.org/"
 LICENSE="GPL-2"
 KEYWORDS="~amd64 ~ppc64 ~x86"
 IUSE="+brasero cdr daap dbus doc gnome-keyring html ipod libnotify lirc musicbrainz
-mtp nsplugin python test udev upnp vala"
+mtp nsplugin python test udev upnp vala webkit"
 
 # FIXME: double check what to do with fm-radio plugin
 # TODO: watchout for udev use flag changes
