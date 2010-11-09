@@ -9,19 +9,26 @@ inherit git eutils autotools
 EGIT_REPO_URI="git://anongit.freedesktop.org/libfprint/${PN}"
 
 DESCRIPTION="a D-Bus daemon offers libfprint functionality"
-HOMEPAGE="http://www.reactivated.net/fprint/wiki/Fprintd"
+HOMEPAGE="http://cgit.freedesktop.org/libfprint/fprintd/"
 SRC_URI=""
 
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="-static -doc pam"
+IUSE="doc pam static-libs"
 
-DEPEND=">=sys-auth/libfprint-9999
-	>=dev-libs/libusb-1.0.0
+RDEPEND="
+	dev-libs/dbus-glib
+	dev-libs/glib:2
+	>=sys-auth/libfprint-9999
+	sys-auth/polkit
+	pam? ( sys-libs/pam )
+	"
+DEPEND="${RDEPEND}
 	dev-util/gtk-doc
-	pam? ( virtual/pam !sys-auth/pam_fprint )"
-
+	dev-util/intltool
+	doc? ( dev-libs/libxml2 dev-libs/libxslt )
+	"
 src_unpack() {
 	git_src_unpack
 	cd "${S}"
@@ -29,24 +36,39 @@ src_unpack() {
 	eautoreconf
 }
 
+src_prepare() {
+	cp /usr/share/gtk-doc/data/gtk-doc.make . || die
+	sed -e '/SUBDIRS/s: po::' -i Makefile.am || die
+	eautoreconf
+	intltoolize || die
+}
+
 src_configure() {
-	econf --libdir=/lib \
-		$(use_enable doc gtk-doc-html) \
-		$(use_enable pam) \
-		$(use_enable static) || die
+	econf $(use_enable pam) \
+		$(use_enable static-libs static) \
+		$(use_enable doc gtk-doc-html)
 }
 
 src_install() {
-	emake DESTDIR="${D}" install || die
-	find "${D}" -name "*.la" -exec rm {} + || die "removal of *.la files failed"
-	dodoc AUTHORS ChangeLog NEWS README || die
+	emake DESTDIR="${D}" install \
+		pammoddir=/$(get_libdir)/security || die
+
+	keepdir /var/lib/fprint || die
+
+	dodoc AUTHORS ChangeLog NEWS README TODO || die
+	if use doc ; then
+		insinto ${EPREFIX}/usr/share/doc/${PF}/html
+		doins doc/{fprintd-docs,version}.xml || die
+		insinto ${EPREFIX}/usr/share/doc/${PF}/html/dbus
+		doins doc/dbus/net.reactivated.Fprint.{Device,Manager}.ref.xml || die
+	fi
 }
 
 pkg_postinst() {
-	if use pam; then
-		einfo "You must add one line to /etc/pam.d/system-auth to enable PAM"
-		einfo "module:"
-		einfo "auth        sufficient  pam_fprintd.so"
-		einfo ""
-	fi
+	elog "You can add the following line to your /etc/pam.d/system-auth"
+	elog
+	elog "    auth    sufficient      pam_fprintd.so"
+	elog
+	elog "to enable the PAM module for authentication."
+	elog "But don't lock yourself out, keep one terminal open!"
 }
