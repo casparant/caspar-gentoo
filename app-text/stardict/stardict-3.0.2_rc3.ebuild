@@ -46,7 +46,7 @@ MY_S=${WORKDIR}/${PN}-${PV/_rc*/}
 
 src_unpack() {
 	unpack ${A}
-	cd "${S}"
+	cd "${MY_S}"
 #	epatch "${FILESDIR}"/${P}-configure.in-EST.diff
 #	epatch "${FILESDIR}"/${P}-gconf-m4.diff
 #	epatch "${FILESDIR}"/${P}-gcc4.3.patch
