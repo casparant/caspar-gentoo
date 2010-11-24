@@ -42,11 +42,11 @@ DEPEND="${DEP}
 	dev-util/pkgconfig
 	dev-libs/libsigc++"
 
-MY_S=${WORKDIR}/${PN}-${PV/_rc3/}
+S=${WORKDIR}/${PN}-${PV/_rc3/}
 
-src_unpack() {
-	unpack ${A}
-	cd "${MY_S}"
+#src_unpack() {
+#	unpack ${A}
+#	cd "${MY_S}"
 #	epatch "${FILESDIR}"/${P}-configure.in-EST.diff
 #	epatch "${FILESDIR}"/${P}-gconf-m4.diff
 #	epatch "${FILESDIR}"/${P}-gcc4.3.patch
@@ -60,7 +60,7 @@ src_unpack() {
 #
 #	AT_M4DIR="m4" eautoreconf
 #	gnome2_omf_fix
-}
+#}
 
 src_compile() {
 	export PKG_CONFIG=$(type -P pkg-config)
