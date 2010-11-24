@@ -42,7 +42,7 @@ DEPEND="${DEP}
 	dev-util/pkgconfig
 	dev-libs/libsigc++"
 
-MY_S=${WORKDIR}/${PN}-${PV/_rc*/}
+MY_S=${WORKDIR}/${PN}-${PV/_rc3/}
 
 src_unpack() {
 	unpack ${A}
