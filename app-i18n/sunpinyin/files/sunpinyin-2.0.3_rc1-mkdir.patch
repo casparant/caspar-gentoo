@@ -1,0 +1,11 @@
+--- wrapper/xim/settings.orig.c	2010-11-01 14:27:51.323000037 +0800
++++ wrapper/xim/settings.c	2010-11-01 14:28:09.021000037 +0800
+@@ -319,7 +319,7 @@
+     if (fp == NULL) {
+         char config_dir[256];
+         snprintf(config_dir, 256, "%s/.sunpinyin", getenv("HOME"));
+-        mkdir(config_dir, 0600);
++        mkdir(config_dir, 0700);
+         settings_save();
+         if ((fp = fopen(path, "r")) == NULL)
+             return;
