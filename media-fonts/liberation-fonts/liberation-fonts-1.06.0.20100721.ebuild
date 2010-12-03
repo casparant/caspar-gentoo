@@ -24,10 +24,8 @@ FONT_CONF=( "${FILESDIR}/60-liberation.conf" )
 DEPEND="fontforge? ( media-gfx/fontforge )"
 RDEPEND=""
 
-S=${WORKDIR}/{P}
-
 if use fontforge; then
 	FONT_S=${S}/ttf
 else
-	FONT_S=${WORKDIR}
+	FONT_S=${WORKDIR}/${P}
 fi
