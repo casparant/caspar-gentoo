@@ -29,7 +29,7 @@ RDEPEND="dev-db/sqlite:3
 DEPEND="${RDEPEND}
 	dev-util/pkgconfig
 	xim? ( x11-proto/xproto )"
-S="${WORKDIR}/${PN}"
+S="${WORKDIR}/${MY_P}"
 
 src_compile() {
 	if use amd64; then
