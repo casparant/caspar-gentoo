@@ -6,10 +6,11 @@ EAPI=2
 inherit autotools eutils games
 
 
+MY_PVMAJ=${PV/_*/}
 MY_P=${P/_/}
 DESCRIPTION="A kart racing game starring Tux, the linux penguin (TuxKart fork)"
 HOMEPAGE="http://supertuxkart.sourceforge.net/"
-SRC_URI="mirror://sourceforge/supertuxkart/files/SuperTuxKart/${PV}/${MY_P}-src.tar.bz2
+SRC_URI="mirror://sourceforge/supertuxkart/files/SuperTuxKart/${MY_PVMAJ}/${MY_P}-src.tar.bz2
 	mirror://gentoo/${PN}.png"
 
 LICENSE="GPL-3 CCPL-Attribution-ShareAlike-3.0 CCPL-Attribution-2.0 CCPL-Sampling-Plus-1.0 public-domain as-is"
@@ -30,7 +31,9 @@ RDEPEND=">=media-libs/plib-1.8.4
 DEPEND="${RDEPEND}
 	nls? ( sys-devel/gettext )"
 
-src_prepare() {
+S=${WORKDIR}/${MY_P}
+
+#src_prepare() {
 #	esvn_clean
 #	sed -i \
 #		-e '/ENETTREE/d' \
@@ -61,8 +64,8 @@ src_prepare() {
 #		|| die "sed failed"
 #	rm -rf src/enet
 #	epatch "${FILESDIR}"/${P}-ovflfix.patch
-	eautoreconf
-}
+#	eautoreconf
+#}
 
 src_configure() {
 	egamesconf \
