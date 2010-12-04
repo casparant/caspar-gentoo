@@ -30,7 +30,7 @@ RDEPEND=">=media-libs/plib-1.8.4
 DEPEND="${RDEPEND}
 	nls? ( sys-devel/gettext )"
 
-#src_prepare() {
+src_prepare() {
 #	esvn_clean
 #	sed -i \
 #		-e '/ENETTREE/d' \
@@ -61,8 +61,8 @@ DEPEND="${RDEPEND}
 #		|| die "sed failed"
 #	rm -rf src/enet
 #	epatch "${FILESDIR}"/${P}-ovflfix.patch
-#	eautoreconf
-#}
+	eautoreconf
+}
 
 src_configure() {
 	egamesconf \
