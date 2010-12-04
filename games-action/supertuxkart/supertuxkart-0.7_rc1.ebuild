@@ -21,6 +21,7 @@ IUSE="nls"
 RDEPEND=">=media-libs/plib-1.8.4
 	virtual/opengl
 	media-libs/freeglut
+	dev-games/irrlicht
 	virtual/glu
 	net-libs/enet:0
 	media-libs/libmikmod
