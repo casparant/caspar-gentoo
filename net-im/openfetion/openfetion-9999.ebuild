@@ -5,9 +5,10 @@
 
 EAPI="2"
 
-inherit flag-o-matic subversion gnome2 eutils autotools
+inherit flag-o-matic mercurial gnome2 eutils autotools
 
-ESVN_REPO_URI="http://ofetion.googlecode.com/svn/trunk/"
+#ESVN_REPO_URI="http://ofetion.googlecode.com/svn/trunk/"
+EHG_REPO_URI="https://ofetion.googlecode.com/hg/"
 DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
 SRC_URI=""
@@ -30,7 +31,7 @@ DEPEND="gstreamer? ( media-libs/gstreamer )
 RDEPEND=${DEPEND}
 
 src_unpack() {
-	subversion_src_unpack
+	mercurial_src_unpack
 }
 
 src_prepare() {
