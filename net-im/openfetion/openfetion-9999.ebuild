@@ -39,11 +39,11 @@ src_unpack() {
 src_configure() {
 	mycmakeargs=(
 		$(cmake-utils_use_enable nls)
-		$(cmake-utils_use_with gstreamer gstreamer-0.10)
+		$(cmake-utils_use_with gstreamer)
 		$(cmake-utils_use_with libnotify)
-		$(cmake-utils_use_with xscreensaver xscrnsaver)
-		$(cmake-utils_use_with networkmanager NetworkManager)
-		$(cmake-utils_use_with networkmanager dbus-glib-1)
+		$(cmake-utils_use_with xscreensaver LIBXSS)
+		$(cmake-utils_use_with networkmanager)
+		$(cmake-utils_use_with networkmanager DBUSGLIB)
 	)
 	cmake-utils_src_configure
 }
