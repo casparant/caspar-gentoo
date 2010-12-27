@@ -38,7 +38,7 @@ src_unpack() {
 
 src_configure() {
 	mycmakeargs=(
-		$(cmake-utils_use_enable nls)
+		$(cmake-utils_use_disable nls)
 		$(cmake-utils_use_with gstreamer)
 		$(cmake-utils_use_with libnotify)
 		$(cmake-utils_use_with xscreensaver LIBXSS)
