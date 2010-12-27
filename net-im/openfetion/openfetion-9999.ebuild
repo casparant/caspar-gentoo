@@ -5,7 +5,7 @@
 
 EAPI="2"
 
-inherit flag-o-matic mercurial gnome2 eutils autotools
+inherit mercurial gnome2 cmake-utils eutils
 
 #ESVN_REPO_URI="http://ofetion.googlecode.com/svn/trunk/"
 EHG_REPO_URI="https://ofetion.googlecode.com/hg/"
@@ -18,15 +18,17 @@ LANGS="zh"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86 amd64"
-IUSE="nls +vanilla gstreamer libnotify +xscreensaver networkmanager -debug"
+IUSE="nls gstreamer libnotify +xscreensaver networkmanager"
 
 DEPEND="gstreamer? ( media-libs/gstreamer )
 		libnotify? ( x11-libs/libnotify )
 		xscreensaver? ( x11-libs/libXScrnSaver )
 		networkmanager? ( net-misc/networkmanager )
+		dev-libs/glib:2
+		x11-libs/gtk+:2
+		x11-libs/gdk-pixbuf:2
+		dev-db/sqlite:3
 		dev-libs/openssl
-		>=x11-libs/gtk+-2.16.6
-		>=dev-db/sqlite-3.3.17
 		dev-libs/libxml2"
 RDEPEND=${DEPEND}
 
@@ -34,29 +36,28 @@ src_unpack() {
 	mercurial_src_unpack
 }
 
-src_prepare() {
-	rm -f "${S}"/configure
-	eautoreconf
-}
-
 src_configure() {
-	econf $(use_enable nls) \
-		$(use_enable gstreamer gst) \
-		$(use_enable libnotify) \
-		$(use_enable xscreensaver screensaver) \
-		$(use_enable networkmanager nm) \
-		$(use_enable debug)
+	mycmakeargs=(
+		$(cmake-utils_use_enable nls)
+		$(cmake-utils_use_with gstreamer gstreamer-0.10)
+		$(cmake-utils_use_with libnotify)
+		$(cmake-utils_use_with xscreensaver xscrnsaver)
+		$(cmake-utils_use_with networkmanager NetworkManager)
+		$(cmake-utils_use_with networkmanager dbus-glib-1)
+	)
+	cmake-utils_src_configure
 }
+
 src_install() {
-#	einstall
-	emake DESTDIR="${D}" install || die "Install failed"
-
-#without gstreamer , newmessage.wav is useless
+	cmake-utils_src_install
 	use gstreamer || rm "${D}/usr/share/openfetion/resource/newmessage.wav"
-
-	einfo ""
-	einfo "To use the sound reminder function, please enable gstreamer USE flag"
-	einfo "and compile it again."
-	einfo "Since v1.8 has some new feature, you might need to clean some data"
-	einfo "cd ~/.openfetion && rm global.dat && find . -name "config.dat" -exec rm {} \;;"
 }
+
+pkg_postinst() {
+	if ! use gstreamer; then
+		einfo ""
+		einfo "To use the sound reminder function, please enable gstreamer USE flag"
+		einfo "and compile it again."
+	fi
+}
+
