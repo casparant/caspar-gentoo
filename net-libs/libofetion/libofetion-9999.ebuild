@@ -28,12 +28,13 @@ src_unpack() {
 	mercurial_src_unpack
 }
 
-S=${S}/${PN}/${PN}
-
+MY_S=${S}/${PN}
 src_configure() {
+	cd ${MY_S}
 	cmake-utils_src_configure
 }
 
 src_install() {
+	cd ${MY_S}
 	cmake-utils_src_install
 }
