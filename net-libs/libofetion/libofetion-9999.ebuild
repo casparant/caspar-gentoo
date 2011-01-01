@@ -28,7 +28,7 @@ src_unpack() {
 	mercurial_src_unpack
 }
 
-S=${S}/${PN}
+S=${S}/${PN}/${PN}
 
 src_configure() {
 	cmake-utils_src_configure
