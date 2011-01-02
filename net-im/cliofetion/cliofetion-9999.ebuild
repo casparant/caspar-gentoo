@@ -8,7 +8,7 @@ inherit mercurial cmake-utils
 CMAKE_MIN_VERSION="2.6"
 
 EHG_REPO_URI="https://ofetion.googlecode.com/hg/"
-DESCRIPTION="An open source lib of CHINA MOBILE's Fetion Protocol version 4"
+DESCRIPTION="A command-line version of openfetion"
 HOMEPAGE="http://code.google.com/p/ofetion/"
 SRC_URI=""
 RESTRICT="mirror"
@@ -20,9 +20,7 @@ KEYWORDS="~x86 amd64"
 IUSE=""
 DOCS=( AUTHORS ChangeLog README )
 
-DEPEND="dev-db/sqlite:3
-		dev-libs/openssl
-		dev-libs/libxml2"
+DEPEND=">=net-libs/libofetion-9999"
 RDEPEND="${DEPEND}
 		dev-util/pkgconfig"
 

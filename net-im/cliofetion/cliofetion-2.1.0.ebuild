@@ -4,13 +4,12 @@
 
 EAPI="3"
 
-inherit mercurial cmake-utils
+inherit cmake-utils
 CMAKE_MIN_VERSION="2.6"
 
-EHG_REPO_URI="https://ofetion.googlecode.com/hg/"
-DESCRIPTION="An open source lib of CHINA MOBILE's Fetion Protocol version 4"
+DESCRIPTION="A command-line version of openfetion"
 HOMEPAGE="http://code.google.com/p/ofetion/"
-SRC_URI=""
+SRC_URI="http://ofetion.googlecode.com/files/${P}.tar.gz"
 RESTRICT="mirror"
 LANGS="zh"
 
@@ -20,16 +19,9 @@ KEYWORDS="~x86 amd64"
 IUSE=""
 DOCS=( AUTHORS ChangeLog README )
 
-DEPEND="dev-db/sqlite:3
-		dev-libs/openssl
-		dev-libs/libxml2"
+DEPEND=">=net-libs/libofetion-2.1.0"
 RDEPEND="${DEPEND}
 		dev-util/pkgconfig"
-
-src_unpack() {
-	mercurial_src_unpack
-	S=${WORKDIR}/${P}/${PN}
-}
 
 src_install() {
 	cmake-utils_src_install
