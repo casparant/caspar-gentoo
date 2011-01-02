@@ -28,12 +28,19 @@ src_unpack() {
 	mercurial_src_unpack
 }
 
-S=${WORKDIR}/${P}/${PN}
+MY_S=${WORKDIR}/${P}/${PN}
 
 src_configure() {
+	cd ${MY_S}
 	cmake-utils_src_configure
 }
 
+src_compile() {
+	cd ${MY_S}
+	cmake-utils_src_compile
+}
+
 src_install() {
+	cd ${MY_S}
 	cmake-utils_src_install
 }
