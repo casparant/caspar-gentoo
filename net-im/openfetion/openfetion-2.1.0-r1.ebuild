@@ -4,55 +4,49 @@
 
 EAPI="3"
 
-inherit mercurial cmake-utils
+inherit cmake-utils
 CMAKE_MIN_VERSION="2.6"
 
-EHG_REPO_URI="https://ofetion.googlecode.com/hg/"
 DESCRIPTION="A GTK IM client using CHINA MOBILE's Fetion Protocol 4"
 HOMEPAGE="http://code.google.com/p/ofetion/"
-SRC_URI=""
+SRC_URI="http://ofetion.googlecode.com/files/${P}.tar.gz"
 RESTRICT="mirror"
-LANGS="zh"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~x86 amd64"
-IUSE="+nls gstreamer libnotify +xscreensaver networkmanager"
+KEYWORDS="~x86 ~amd64"
+IUSE="gstreamer libnotify networkmanager +xscreensaver"
 DOCS=( AUTHORS ChangeLog README )
+PATCHES=( "${FILESDIR}"/${P}-fix-version.patch )
 
-DEPEND="=net-libs/libofetion-9999
-		gstreamer? ( media-libs/gstreamer )
-		libnotify? ( x11-libs/libnotify )
-		xscreensaver? ( x11-libs/libXScrnSaver )
-		networkmanager? ( 
-			net-misc/networkmanager
-			dev-libs/dbus-glib
-		)
-		dev-libs/glib:2
+DEPEND="dev-libs/glib:2
+		>=net-libs/libofetion-2.1.0
+		x11-libs/gdk-pixbuf:2
 		x11-libs/gtk+:2
-		x11-libs/gdk-pixbuf:2"
+		gstreamer? ( media-libs/gstreamer:0.10 )
+		libnotify? ( x11-libs/libnotify )
+		networkmanager? ( 
+			dev-libs/dbus-glib
+			net-misc/networkmanager 
+		)
+		xscreensaver? ( x11-libs/libXScrnSaver )"
 RDEPEND="${DEPEND}
 		dev-util/pkgconfig
-		nls? ( sys-devel/gettext )"
-
-src_unpack() {
-	mercurial_src_unpack
-	S=${WORKDIR}/${P}/${PN}
-}
+		sys-devel/gettext"
 
 src_configure() {
 	mycmakeargs=(
-		$(cmake-utils_use nls)
 		$(cmake-utils_use_with gstreamer)
 		$(cmake-utils_use_with libnotify)
-		$(cmake-utils_use_with xscreensaver LIBXSS)
 		$(cmake-utils_use_with networkmanager)
+		$(cmake-utils_use_with xscreensaver LIBXSS)
 	)
 	cmake-utils_src_configure
 }
 
 src_install() {
 	cmake-utils_src_install
+	use gstreamer || rm "${D}/usr/share/openfetion/resource/newmessage.wav"
 }
 
 pkg_postinst() {
