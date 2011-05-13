@@ -23,7 +23,10 @@ src_install() {
 	insinto /usr/share/icons
 	cd "${WORKDIR}/${PN}"
 	doins -r elementary
-	use monochrome && doins -r elementary-mono-dark
+	use monochrome && {
+		insinto /usr/share/icons/elementary-monochrome
+		doins -r elementary-mono-dark/*
+	}
 }
 
 pkg_preinst() {
@@ -37,4 +40,3 @@ pkg_postinst() {
 pkg_postrm() {
 	gnome2_icon_cache_update
 }
-
