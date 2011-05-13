@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/1089/trunk/dev-libs/liblunar
+END
+metadata.xml
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/1035/trunk/dev-libs/liblunar/metadata.xml
+END
+Manifest
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/1089/trunk/dev-libs/liblunar/Manifest
+END
+ChangeLog
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/1089/trunk/dev-libs/liblunar/ChangeLog
+END
+liblunar-2.2.1.ebuild
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/1035/trunk/dev-libs/liblunar/liblunar-2.2.1.ebuild
+END
+liblunar-2.2.4.ebuild
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/1089/trunk/dev-libs/liblunar/liblunar-2.2.4.ebuild
+END
