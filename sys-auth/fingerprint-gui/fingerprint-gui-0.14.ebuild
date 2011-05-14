@@ -46,7 +46,7 @@ src_install() {
 	dobin bin/fingerprint-suid/fingerprint-suid
 	fperms u+s /usr/local/bin/fingerprint-suid
 	insinto /$(get_libdir)/security
-	dopammod bin/fingerprint-pam/libpam_fingerprint-gui.so
+	newpammod bin/fingerprint-pam/libpam_fingerprint-gui.so pam_fingerprint-gui.so
 	domenu bin/fingerprint-gui/fingerprint-gui.desktop
 	dodoc CHANGELOG COPYING \
 		Hacking.pdf IMPORTANT-UPGRADE-INFORMATION.txt Install-step-by-step.pdf
@@ -54,7 +54,7 @@ src_install() {
 
 pkg_postinst() {
 	elog "1) You should add the following line to the first of /etc/pam.d/system-auth"
-	elog "   auth        sufficient  libpam_fingerprint-gui.so"
+	elog "   auth        sufficient  pam_fingerprint-gui.so"
 	elog "2) You must be in the plugdev group to use fingerprint"
 	if use upek; then
 		elog "3) You select to install upek, it's not open-sourced. Use it in your"
