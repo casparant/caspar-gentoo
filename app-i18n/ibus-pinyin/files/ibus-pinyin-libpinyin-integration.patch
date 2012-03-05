@@ -1,0 +1,3413 @@
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/configure.ac ibus-pinyin-1.3.99.20110706/configure.ac
+--- ibus-pinyin-1.3.99.20110706.orig/configure.ac	2011-11-18 17:15:14.006180138 +0800
++++ ibus-pinyin-1.3.99.20110706/configure.ac	2011-11-29 21:30:04.469033322 +0800
+@@ -62,6 +62,22 @@
+ ])
+ AC_PATH_PROG(SQLITE3, sqlite3)
+ 
++# check libpinyin
++# --disable-libpinyin
++AC_ARG_ENABLE(libpinyin,
++    AS_HELP_STRING([--disable-libpinyin],
++         [do not use libpinyin]),
++    [enable_libpinyin=$enableval],
++    [enable_libpinyin=yes]
++)
++
++PKG_CHECK_MODULES(LIBPINYIN, [
++    libpinyin >= 0.2.0
++], [],
++[enable_libpinyin=no])
++
++AM_CONDITIONAL(IBUS_BUILD_LIBPINYIN, [test x"$enable_libpinyin" = x"yes"])
++
+ # check uuid
+ AC_CHECK_FUNCS([uuid_create], [], [
+     PKG_CHECK_MODULES(LIBUUID, uuid, [
+@@ -221,6 +237,7 @@
+     Install prefix              $prefix
+     Use boost                   $enable_boost
+     Use opencc                  $enable_opencc
++    Use libpinyin               $enable_libpinyin
+     Build database android      $enable_db_android
+     Build database open-phrase  $enable_db_open_phrase
+     Build lua extension         $enable_lua_extension
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/setup/main.py ibus-pinyin-1.3.99.20110706/setup/main.py
+--- ibus-pinyin-1.3.99.20110706.orig/setup/main.py	2011-11-18 17:15:14.023179926 +0800
++++ ibus-pinyin-1.3.99.20110706/setup/main.py	2011-11-29 21:30:04.463033396 +0800
+@@ -31,12 +31,13 @@
+ _ = lambda a : gettext.dgettext("ibus-pinyin", a)
+ 
+ class PreferencesDialog:
+-    def __init__(self,engine):
++    def __init__(self,engine,libpinyin):
+         locale.setlocale(locale.LC_ALL, "")
+         localedir = os.getenv("IBUS_LOCALEDIR")
+         gettext.bindtextdomain("ibus-pinyin", localedir)
+         gettext.bind_textdomain_codeset("ibus-pinyin", "UTF-8")
+ 
++        self.__libpinyin = libpinyin
+         self.__bus = ibus.Bus()
+         self.__config = self.__bus.get_config()
+         self.__builder = gtk.Builder()
+@@ -50,14 +51,16 @@
+             self.__init_general()
+             self.__init_pinyin()
+             self.__init_fuzzy()
+-            self.__init_dictionary()
++            if not self.__libpinyin:
++                self.__init_dictionary()
+             self.__init_about()
+         elif engine == "bopomofo":
+             self.__config_namespace = "engine/Bopomofo"
+             self.__init_general()
+             self.__init_bopomofo()
+             self.__init_fuzzy()
+-            self.__init_dictionary()
++            if not self.__libpinyin:
++                self.__init_dictionary()
+             self.__init_about()
+             self.__convert_fuzzy_pinyin_to_bopomofo()
+             
+@@ -138,6 +141,8 @@
+         self.__double_pinyin_schema = self.__builder.get_object("DoublePinyinSchema")
+         # self.__double_pinyin_schema_label = self.__builder.get_object("labelDoublePinyinSchema")
+         self.__double_pinyin_show_raw = self.__builder.get_object("DoublePinyinShowRaw")
++        if self.__libpinyin:
++            self.__double_pinyin_show_raw.hide ()
+ 
+         renderer = gtk.CellRendererText()
+         self.__double_pinyin_schema.pack_start(renderer)
+@@ -409,11 +414,15 @@
+ 
+ def main():
+     name = "pinyin"
+-    if len(sys.argv) == 2:
+-        name = sys.argv[1]
++    libpinyin = False
++    for arg in sys.argv[1:]:
++        if arg == "--libpinyin":
++            libpinyin = True
++        else:
++            name = arg
+     if name not in ("pinyin", "bopomofo"):
+         name = "pinyin"
+-    PreferencesDialog(name).run()
++    PreferencesDialog(name, libpinyin).run()
+ 
+ 
+ if __name__ == "__main__":
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/Makefile.am ibus-pinyin-1.3.99.20110706/src/Makefile.am
+--- ibus-pinyin-1.3.99.20110706.orig/src/Makefile.am	2011-11-18 17:15:14.010180087 +0800
++++ ibus-pinyin-1.3.99.20110706/src/Makefile.am	2011-11-29 21:30:04.470033309 +0800
+@@ -106,7 +106,29 @@
+ 	PYTypes.h \
+ 	PYUtil.h \
+ 	PYEnglishEditor.h \
++	PYLibPinyin.h \
++	PYPPhoneticEditor.h \
++	PYPPinyinEditor.h \
++	PYPFullPinyinEditor.h \
++	PYPDoublePinyinEditor.h \
++	PYPBopomofoEditor.h \
++	PYPPinyinEngine.h \
++	PYPBopomofoEngine.h \
++	$(NULL)
++
++if IBUS_BUILD_LIBPINYIN
++ibus_engine_pinyin_c_sources += \
++	PYLibPinyin.cc \
++	PYPPhoneticEditor.cc \
++	PYPPinyinEditor.cc \
++	PYPFullPinyinEditor.cc \
++	PYPDoublePinyinEditor.cc \
++	PYPBopomofoEditor.cc \
++	PYPPinyinEngine.cc \
++	PYPBopomofoEngine.cc \
+ 	$(NULL)
++endif
++
+ 
+ if IBUS_BUILD_LUA_EXTENSION
+ ibus_engine_pinyin_c_sources += PYExtEditor.cc
+@@ -127,6 +149,7 @@
+ ibus_engine_pinyin_CXXFLAGS = \
+ 	@IBUS_CFLAGS@ \
+ 	@SQLITE_CFLAGS@ \
++	@LIBPINYIN_CFLAGS@ \
+ 	@OPENCC_CFLAGS@ \
+ 	-DGETTEXT_PACKAGE=\"@GETTEXT_PACKAGE@\" \
+ 	-DPKGDATADIR=\"$(pkgdatadir)\" \
+@@ -146,6 +169,7 @@
+ ibus_engine_pinyin_LDADD = \
+ 	@IBUS_LIBS@ \
+ 	@SQLITE_LIBS@ \
++	@LIBPINYIN_LIBS@ \
+ 	@OPENCC_LIBS@ \
+ 	$(NULL)
+ 
+@@ -154,6 +178,10 @@
+ ibus_engine_pinyin_LDADD += $(LIBUUID_LIBS)
+ endif
+ 
++if IBUS_BUILD_LIBPINYIN
++   ibus_engine_pinyin_CXXFLAGS += -DIBUS_BUILD_LIBPINYIN
++endif
++
+ if IBUS_BUILD_LUA_EXTENSION
+     ibus_engine_pinyin_CXXFLAGS +=  \
+ 	@LUA_CFLAGS@ \
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/pinyin.xml.in.in ibus-pinyin-1.3.99.20110706/src/pinyin.xml.in.in
+--- ibus-pinyin-1.3.99.20110706.orig/src/pinyin.xml.in.in	2011-11-18 17:15:14.007180125 +0800
++++ ibus-pinyin-1.3.99.20110706/src/pinyin.xml.in.in	2011-11-29 21:32:48.036988440 +0800
+@@ -13,7 +13,7 @@
+ 	<engines>
+ 		<engine>
+ 			<name>pinyin</name>
+-			<language>zh</language>
++			<language>zh_CN</language>
+ 			<license>GPL</license>
+ 			<author>Peng Huang &lt;shawn.p.huang@gmail.com&gt;
+ BYVoid &lt;byvoid1@gmail.com&gt;
+@@ -26,7 +26,7 @@
+ 		</engine>
+ 		<engine>
+ 			<name>bopomofo</name>
+-			<language>zh</language>
++			<language>zh_TW</language>
+ 			<license>GPL</license>
+ 			<author>BYVoid &lt;byvoid1@gmail.com&gt;
+ Peng Huang &lt;shawn.p.huang@gmail.com&gt;
+@@ -37,6 +37,19 @@
+ 			<description>Bopomofo input method</description>
+ 			<rank>98</rank>
+ 		</engine>
++		<engine>
++			<name>libpinyin</name>
++			<language>zh_CN</language>
++			<license>GPL</license>
++			<author>Peng Huang &lt;shawn.p.huang@gmail.com&gt;
++                        Peng Wu &lt;alexepico@gmail.com&gt;
++                        BYVoid &lt;byvoid1@gmail.com&gt;
++                        </author>
++			<icon>${pkgdatadir}/icons/ibus-pinyin.svg</icon>
++			<layout>us</layout>
++			<longname>Intelligent Pinyin(Beta)</longname>
++			<description>Intelligent Pinyin input method</description>
++			<rank>99</rank>
++		</engine>
+ 	</engines>
+-
+ </component>
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYConfig.cc ibus-pinyin-1.3.99.20110706/src/PYConfig.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYConfig.cc	2011-11-18 17:15:14.008180112 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYConfig.cc	2011-11-29 21:30:04.470033309 +0800
+@@ -23,6 +23,9 @@
+ #include "PYTypes.h"
+ #include "PYBus.h"
+ #include "PYDoublePinyinTable.h"
++#ifdef IBUS_BUILD_LIBPINYIN
++#include "PYLibPinyin.h"
++#endif
+ 
+ namespace PY {
+ 
+@@ -336,6 +339,14 @@
+                               Config      *self)
+ {
+     self->valueChanged (section, name, value);
++    if (self->m_section != section)
++        return;
++#ifdef IBUS_BUILD_LIBPINYIN
++    if (self->m_section == "engine/Pinyin")
++        LibPinyinBackEnd::instance ().setPinyinOptions (self);
++    if (self->m_section == "engine/Bopomofo")
++        LibPinyinBackEnd::instance ().setChewingOptions (self);
++#endif
+ }
+ 
+ static const struct {
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYEngine.cc ibus-pinyin-1.3.99.20110706/src/PYEngine.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYEngine.cc	2011-11-18 17:15:14.010180087 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYEngine.cc	2011-11-29 21:30:04.471033296 +0800
+@@ -23,6 +23,8 @@
+ #include "PYEngine.h"
+ #include "PYPinyinEngine.h"
+ #include "PYBopomofoEngine.h"
++#include "PYPPinyinEngine.h"
++#include "PYPBopomofoEngine.h"
+ 
+ namespace PY {
+ /* code of engine class of GObject */
+@@ -155,11 +157,26 @@
+                                                            construct_params);
+     name = ibus_engine_get_name ((IBusEngine *) engine);
+ 
+-    if (name && 
+-        (std::strcmp (name, "bopomofo") == 0 || std::strcmp (name, "bopomofo-debug") == 0)) {
+-        engine->engine = new BopomofoEngine (IBUS_ENGINE (engine));
+-    }
+-    else {
++    if (name) {
++        if (std::strcmp (name, "pinyin") == 0 ||
++            std::strcmp (name, "pinyin-debug") == 0) {
++            engine->engine = new PinyinEngine (IBUS_ENGINE (engine));
++        }
++        if (std::strcmp (name, "bopomofo") == 0 ||
++            std::strcmp (name, "bopomofo-debug") == 0) {
++            engine->engine = new BopomofoEngine (IBUS_ENGINE (engine));
++        }
++#ifdef IBUS_BUILD_LIBPINYIN
++        if (std::strcmp (name, "libpinyin") == 0 ||
++            std::strcmp (name, "libpinyin-debug") == 0) {
++            engine->engine = new LibPinyinPinyinEngine (IBUS_ENGINE (engine));
++        }
++        if (std::strcmp (name, "libbopomofo") == 0 ||
++            std::strcmp (name, "libbopomofo-debug") == 0 ) {
++            engine->engine = new LibPinyinBopomofoEngine (IBUS_ENGINE (engine));
++        }
++#endif
++    } else {
+         engine->engine = new PinyinEngine (IBUS_ENGINE (engine));
+     }
+     return (GObject *) engine;
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYLibPinyin.cc ibus-pinyin-1.3.99.20110706/src/PYLibPinyin.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYLibPinyin.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYLibPinyin.cc	2011-11-29 21:30:04.466033358 +0800
+@@ -0,0 +1,268 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include "PYLibPinyin.h"
++#include "PYTypes.h"
++#include "PYConfig.h"
++
++#define LIBPINYIN_SAVE_TIMEOUT   (5 * 60)
++
++using namespace PY;
++
++std::unique_ptr<LibPinyinBackEnd> LibPinyinBackEnd::m_instance;
++
++static LibPinyinBackEnd libpinyin_backend;
++
++LibPinyinBackEnd::LibPinyinBackEnd () {
++    m_timeout_id = 0;
++    m_timer = g_timer_new();
++    m_pinyin_context = NULL;
++    m_chewing_context = NULL;
++}
++
++LibPinyinBackEnd::~LibPinyinBackEnd () {
++    g_timer_destroy (m_timer);
++    if (m_timeout_id != 0) {
++        saveUserDB ();
++        g_source_remove (m_timeout_id);
++    }
++
++    if (m_pinyin_context)
++        pinyin_fini(m_pinyin_context);
++    m_pinyin_context = NULL;
++    if (m_chewing_context)
++        pinyin_fini(m_chewing_context);
++    m_chewing_context = NULL;
++}
++
++pinyin_instance_t *
++LibPinyinBackEnd::allocPinyinInstance ()
++{
++    if (NULL == m_pinyin_context) {
++        gchar * userdir = g_build_filename (g_get_home_dir(), ".cache",
++                                            "ibus", "libpinyin", NULL);
++        int retval = g_mkdir_with_parents (userdir, 0700);
++        if (retval) {
++            g_free(userdir); userdir = NULL;
++        }
++        m_pinyin_context = pinyin_init ("/usr/share/libpinyin/data", userdir);
++        setPinyinOptions (&PinyinConfig::instance ());
++        g_free(userdir);
++    }
++    return pinyin_alloc_instance (m_pinyin_context);
++}
++
++void
++LibPinyinBackEnd::freePinyinInstance (pinyin_instance_t *instance)
++{
++    pinyin_free_instance (instance);
++}
++
++pinyin_instance_t *
++LibPinyinBackEnd::allocChewingInstance ()
++{
++    if (NULL == m_chewing_context) {
++        gchar * userdir = g_build_filename (g_get_home_dir(), ".cache",
++                                            "ibus", "libbopomofo", NULL);
++        int retval = g_mkdir_with_parents (userdir, 0700);
++        if (retval) {
++            g_free(userdir); userdir = NULL;
++        }
++        m_chewing_context = pinyin_init ("/usr/share/libpinyin/data", NULL);
++        setChewingOptions (&BopomofoConfig::instance ());
++        g_free(userdir);
++    }
++    return pinyin_alloc_instance (m_chewing_context);
++}
++
++void
++LibPinyinBackEnd::freeChewingInstance (pinyin_instance_t *instance)
++{
++    pinyin_free_instance (instance);
++}
++
++void
++LibPinyinBackEnd::init (void) {
++    g_assert (NULL == m_instance.get ());
++    LibPinyinBackEnd * backend = new LibPinyinBackEnd;
++    m_instance.reset (backend);
++}
++
++void
++LibPinyinBackEnd::finalize (void) {
++    m_instance.reset ();
++}
++
++/* Here are the fuzzy pinyin options conversion table. */
++static const struct {
++    guint ibus_pinyin_option;
++    PinyinAmbiguity libpinyin_option;
++} fuzzy_options [] = {
++    /* fuzzy pinyin */
++    { PINYIN_FUZZY_C_CH,        PINYIN_AmbCiChi        },
++    { PINYIN_FUZZY_CH_C,        PINYIN_AmbChiCi        },
++    { PINYIN_FUZZY_Z_ZH,        PINYIN_AmbZiZhi        },
++    { PINYIN_FUZZY_ZH_Z,        PINYIN_AmbZhiZi        },
++    { PINYIN_FUZZY_S_SH,        PINYIN_AmbSiShi        },
++    { PINYIN_FUZZY_SH_S,        PINYIN_AmbShiSi        },
++    { PINYIN_FUZZY_L_N,         PINYIN_AmbLeNe         },
++    { PINYIN_FUZZY_N_L,         PINYIN_AmbNeLe         },
++    { PINYIN_FUZZY_F_H,         PINYIN_AmbFoHe         },
++    { PINYIN_FUZZY_H_F,         PINYIN_AmbHeFo         },
++    { PINYIN_FUZZY_L_R,         PINYIN_AmbLeRi         },
++    { PINYIN_FUZZY_R_L,         PINYIN_AmbRiLe         },
++    { PINYIN_FUZZY_K_G,         PINYIN_AmbKeGe         },
++    { PINYIN_FUZZY_G_K,         PINYIN_AmbGeKe         },
++    { PINYIN_FUZZY_AN_ANG,      PINYIN_AmbAnAng        },
++    { PINYIN_FUZZY_ANG_AN,      PINYIN_AmbAngAn        },
++    { PINYIN_FUZZY_EN_ENG,      PINYIN_AmbEnEng        },
++    { PINYIN_FUZZY_ENG_EN,      PINYIN_AmbEngEn        },
++    { PINYIN_FUZZY_IN_ING,      PINYIN_AmbInIng        },
++    { PINYIN_FUZZY_ING_IN,      PINYIN_AmbIngIn        }
++};
++
++
++gboolean
++LibPinyinBackEnd::setFuzzyOptions (Config *config, pinyin_context_t *context)
++{
++    g_assert (context);
++
++    guint option = config->option ();
++    PinyinCustomSettings custom;
++
++    custom.set_use_incomplete (option & PINYIN_INCOMPLETE_PINYIN);
++    custom.set_use_ambiguities (PINYIN_AmbAny, false);
++
++    /* copy values */
++    for (guint i = 0; i < G_N_ELEMENTS (fuzzy_options); i++) {
++        if ( option & fuzzy_options[i].ibus_pinyin_option )
++            custom.set_use_ambiguities
++                (fuzzy_options[i].libpinyin_option, true);
++    }
++
++    pinyin_set_options(context, &custom);
++
++    return TRUE;
++}
++
++/* Here are the double pinyin keyboard scheme mapping table. */
++static const struct{
++    gint double_pinyin_keyboard;
++    PinyinShuangPinScheme shuang_pin_keyboard;
++} shuang_pin_options [] = {
++    {0, SHUANG_PIN_MS},
++    {1, SHUANG_PIN_ZRM},
++    {2, SHUANG_PIN_ABC},
++    {3, SHUANG_PIN_ZIGUANG},
++    {4, SHUANG_PIN_PYJJ},
++    {5, SHUANG_PIN_XHE}
++};
++
++gboolean
++LibPinyinBackEnd::setPinyinOptions (Config *config)
++{
++    if (NULL == m_pinyin_context)
++        return FALSE;
++
++    const gint map = config->doublePinyinSchema ();
++    for (guint i = 0; i < G_N_ELEMENTS (shuang_pin_options); i++) {
++        if (map == shuang_pin_options[i].double_pinyin_keyboard) {
++            /* TODO: set double pinyin scheme. */
++            PinyinShuangPinScheme scheme = shuang_pin_options[i].shuang_pin_keyboard;
++            pinyin_set_double_pinyin_scheme (m_pinyin_context, scheme);
++        }
++    }
++
++    setFuzzyOptions (config, m_pinyin_context);
++    return TRUE;
++}
++
++/* Here are the chewing keyboard scheme mapping table. */
++static const struct {
++    gint bopomofo_keyboard;
++    PinyinZhuYinScheme chewing_keyboard;
++} chewing_options [] = {
++    {0, ZHUYIN_STANDARD},
++    {1, ZHUYIN_GIN_YIEH},
++    {2, ZHUYIN_ET26},
++    {3, ZHUYIN_IBM}
++};
++
++
++gboolean
++LibPinyinBackEnd::setChewingOptions (Config *config)
++{
++    if (NULL == m_chewing_context)
++        return FALSE;
++
++    const gint map = config->bopomofoKeyboardMapping ();
++    for (guint i = 0; i < G_N_ELEMENTS (chewing_options); i++) {
++        if (map == chewing_options[i].bopomofo_keyboard) {
++            /* TODO: set chewing scheme. */
++            PinyinZhuYinScheme scheme = chewing_options[i].chewing_keyboard;
++            pinyin_set_chewing_scheme (m_chewing_context, scheme);
++        }
++    }
++
++    setFuzzyOptions (config, m_chewing_context);
++    return TRUE;
++}
++
++void
++LibPinyinBackEnd::modified (void)
++{
++    /* Restart the timer */
++    g_timer_start (m_timer);
++
++    if (m_timeout_id != 0)
++        return;
++
++    m_timeout_id = g_timeout_add_seconds (LIBPINYIN_SAVE_TIMEOUT,
++                                          LibPinyinBackEnd::timeoutCallback,
++                                          static_cast<gpointer> (this));
++}
++
++gboolean
++LibPinyinBackEnd::timeoutCallback (gpointer data)
++{
++    LibPinyinBackEnd *self = static_cast<LibPinyinBackEnd *> (data);
++
++    /* Get the elapsed time since last modification of database. */
++    guint elapsed = (guint)g_timer_elapsed (self->m_timer, NULL);
++
++    if (elapsed >= LIBPINYIN_SAVE_TIMEOUT &&
++        self->saveUserDB ()) {
++        self->m_timeout_id = 0;
++        return FALSE;
++    }
++
++    return TRUE;
++}
++
++gboolean
++LibPinyinBackEnd::saveUserDB (void)
++{
++    if (m_pinyin_context)
++        pinyin_save (m_pinyin_context);
++    if (m_chewing_context)
++        pinyin_save (m_chewing_context);
++    return TRUE;
++}
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYLibPinyin.h ibus-pinyin-1.3.99.20110706/src/PYLibPinyin.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYLibPinyin.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYLibPinyin.h	2011-11-29 21:30:04.466033358 +0800
+@@ -0,0 +1,74 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#ifndef __PY_LIB_PINYIN_H_
++#define __PY_LIB_PINYIN_H_
++
++#include <memory>
++#include <pinyin.h>
++
++namespace PY {
++
++class Config;
++
++class LibPinyinBackEnd{
++
++public:
++    LibPinyinBackEnd();
++    ~LibPinyinBackEnd();
++
++    gboolean setPinyinOptions (Config *config);
++    gboolean setChewingOptions (Config *config);
++
++    pinyin_instance_t *allocPinyinInstance ();
++    void freePinyinInstance (pinyin_instance_t *instance);
++    pinyin_instance_t *allocChewingInstance ();
++    void freeChewingInstance (pinyin_instance_t *instance);
++    void modified (void);
++
++    /* use static initializer in C++. */
++    static LibPinyinBackEnd & instance (void) { return *m_instance; }
++
++    static void init (void);
++    static void finalize (void);
++
++protected:
++    gboolean setFuzzyOptions (Config *config, pinyin_context_t *context);
++
++private:
++    gboolean saveUserDB (void);
++    static gboolean timeoutCallback (gpointer data);
++
++private:
++    /* libpinyin context */
++    pinyin_context_t *m_pinyin_context;
++    pinyin_context_t *m_chewing_context;
++
++    guint m_timeout_id;
++    GTimer *m_timer;
++
++private:
++    static std::unique_ptr<LibPinyinBackEnd> m_instance;
++};
++
++};
++
++#endif
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYMain.cc ibus-pinyin-1.3.99.20110706/src/PYMain.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYMain.cc	2011-11-18 17:15:14.010180087 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYMain.cc	2011-11-29 21:30:04.472033283 +0800
+@@ -30,6 +30,9 @@
+ #include "PYBus.h"
+ #include "PYConfig.h"
+ #include "PYDatabase.h"
++#ifdef IBUS_BUILD_LIBPINYIN
++#include "PYLibPinyin.h"
++#endif
+ 
+ using namespace PY;
+ 
+@@ -81,6 +84,9 @@
+     }
+ 
+     Database::init ();
++#ifdef IBUS_BUILD_LIBPINYIN
++    LibPinyinBackEnd::init ();
++#endif
+     PinyinConfig::init (bus);
+     BopomofoConfig::init (bus);
+ 
+@@ -101,7 +107,8 @@
+                                                      "zh_CN",
+                                                      "GPL",
+                                                      "Peng Huang <shawn.p.huang@gmail.com>\n"
+-                                                     "BYVoid <byvoid1@gmail.com>",
++                                                     "BYVoid <byvoid1@gmail.com>\n"
++                                                     "Peng Wu <alexepico@gmail.com>",
+                                                      PKGDATADIR "/icons/ibus-pinyin.svg",
+                                                      "us"));
+     ibus_component_add_engine (component,
+@@ -111,20 +118,54 @@
+                                                      "zh_CN",
+                                                      "GPL",
+                                                      "BYVoid <byvoid1@gmail.com>\n"
++                                                     "Peng Huang <shawn.p.huang@gmail.com>\n"
++                                                     "Peng Wu <alexepico@gmail.com>",
++                                                     PKGDATADIR "/icons/ibus-bopomofo.svg",
++                                                     "us"));
++
++#ifdef IBUS_BUILD_LIBPINYIN
++    ibus_component_add_engine (component,
++                               ibus_engine_desc_new ("libpinyin-debug",
++                                                     N_("Intelligent Pinyin (debug)"),
++                                                     N_("Intelligent Pinyin input method (debug)"),
++                                                     "zh_CN",
++                                                     "GPL",
++                                                     "Peng Huang <shawn.p.huang@gmail.com>\n"
++                                                     "Peng Wu <alexepico@gmail.com>\n"
++                                                     "BYVoid <byvoid1@gmail.com>",
++                                                     PKGDATADIR "/icons/ibus-pinyin.svg",
++                                                     "us"));
++    ibus_component_add_engine (component,
++                               ibus_engine_desc_new ("libbopomofo-debug",
++                                                     N_("Intelligent Bopomofo (debug)"),
++                                                     N_("Intelligent Bopomofo input method (debug)"),
++                                                     "zh_CN",
++                                                     "GPL",
++                                                     "BYVoid <byvoid1@gmail.com>\n"
++                                                     "Peng Wu <alexepico@gmail.com>\n"
+                                                      "Peng Huang <shawn.p.huang@gmail.com>",
+                                                      PKGDATADIR "/icons/ibus-bopomofo.svg",
+                                                      "us"));
++#endif
+ 
+     factory = ibus_factory_new (ibus_bus_get_connection (bus));
+ 
+     if (ibus) {
+         ibus_factory_add_engine (factory, "pinyin", IBUS_TYPE_PINYIN_ENGINE);
+         ibus_factory_add_engine (factory, "bopomofo", IBUS_TYPE_PINYIN_ENGINE);
++#ifdef IBUS_BUILD_LIBPINYIN
++        ibus_factory_add_engine (factory, "libpinyin", IBUS_TYPE_PINYIN_ENGINE);
++        ibus_factory_add_engine (factory, "libbopomofo", IBUS_TYPE_PINYIN_ENGINE);
++#endif
+         ibus_bus_request_name (bus, "org.freedesktop.IBus.Pinyin", 0);
+     }
+     else {
+         ibus_factory_add_engine (factory, "pinyin-debug", IBUS_TYPE_PINYIN_ENGINE);
+         ibus_factory_add_engine (factory, "bopomofo-debug", IBUS_TYPE_PINYIN_ENGINE);
++#ifdef IBUS_BUILD_LIBPINYIN
++        ibus_factory_add_engine (factory, "libpinyin-debug", IBUS_TYPE_PINYIN_ENGINE);
++        ibus_factory_add_engine (factory, "libbopomofo-debug", IBUS_TYPE_PINYIN_ENGINE);
++#endif
+         ibus_bus_register_component (bus, component);
+     }
+ 
+@@ -143,6 +184,9 @@
+ static void
+ atexit_cb (void)
+ {
++#ifdef IBUS_BUILD_LIBPINYIN
++    LibPinyinBackEnd::finalize ();
++#endif
+     PY::Database::finalize ();
+ }
+ 
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEditor.cc ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEditor.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEditor.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEditor.cc	2011-11-29 21:30:04.498032959 +0800
+@@ -0,0 +1,390 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#include "PYPBopomofoEditor.h"
++#include "PYConfig.h"
++#include "PYLibPinyin.h"
++#include "PYPinyinProperties.h"
++#include "PYSimpTradConverter.h"
++#include "PYHalfFullConverter.h"
++
++
++namespace PY {
++#include "PYBopomofoKeyboard.h"
++};
++
++using namespace PY;
++
++const static gchar * bopomofo_select_keys[] = {
++    "1234567890",
++    "asdfghjkl;",
++    "1qaz2wsxed",
++    "asdfzxcvgb",
++    "1234qweras",
++    "aoeu;qjkix",
++    "aoeuhtnsid",
++    "aoeuidhtns",
++    "qweasdzxcr"
++};
++
++LibPinyinBopomofoEditor::LibPinyinBopomofoEditor
++(PinyinProperties & props, Config & config)
++    : LibPinyinPhoneticEditor (props, config),
++      m_select_mode (FALSE)
++{
++    m_instance = LibPinyinBackEnd::instance ().allocChewingInstance ();
++}
++
++LibPinyinBopomofoEditor::~LibPinyinBopomofoEditor (void)
++{
++    LibPinyinBackEnd::instance ().freeChewingInstance (m_instance);
++    m_instance = NULL;
++}
++
++void
++LibPinyinBopomofoEditor::reset (void)
++{
++    m_select_mode = FALSE;
++    LibPinyinPhoneticEditor::reset ();
++}
++
++gboolean
++LibPinyinBopomofoEditor::insert (gint ch)
++{
++    /* is full */
++    if (G_UNLIKELY (m_text.length () >= MAX_PINYIN_LEN))
++        return TRUE;
++
++    m_text.insert (m_cursor++, ch);
++    updatePinyin ();
++    update ();
++
++    return TRUE;
++}
++
++
++gboolean
++LibPinyinBopomofoEditor::processGuideKey (guint keyval, guint keycode,
++                                          guint modifiers)
++{
++    if (!m_config.guideKey ())
++        return FALSE;
++
++    if (G_UNLIKELY (cmshm_filter (modifiers) != 0))
++        return FALSE;
++
++    if (G_LIKELY (m_select_mode))
++        return FALSE;
++
++    if (G_UNLIKELY (keyval == IBUS_space)) {
++        m_select_mode = TRUE;
++        update ();
++        return TRUE;
++    }
++
++    return FALSE;
++}
++
++gboolean
++LibPinyinBopomofoEditor::processAuxiliarySelectKey
++(guint keyval, guint keycode, guint modifiers)
++{
++    if (G_UNLIKELY (cmshm_filter (modifiers) != 0))
++        return FALSE;
++
++    guint i;
++
++    switch (keyval) {
++    case IBUS_KP_0:
++        i = 9;
++        if (!m_config.auxiliarySelectKeyKP ())
++            return FALSE;
++        break;
++    case IBUS_KP_1 ... IBUS_KP_9:
++        i = keyval - IBUS_KP_1;
++        if (!m_config.auxiliarySelectKeyKP ())
++            return FALSE;
++        break;
++    case IBUS_F1 ... IBUS_F10:
++        i = keyval - IBUS_F1;
++        if (!m_config.auxiliarySelectKeyF ())
++            return FALSE;
++        break;
++    default:
++        return FALSE;
++    }
++
++    m_select_mode = TRUE;
++    selectCandidateInPage (i);
++
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinBopomofoEditor::processSelectKey (guint keyval, guint keycode,
++                                           guint modifiers)
++{
++    if (G_UNLIKELY (!m_text))
++        return FALSE;
++
++    if (G_LIKELY (!m_select_mode && ((modifiers & IBUS_MOD1_MASK) == 0)))
++        return FALSE;
++
++    const gchar * pos = NULL;
++    const gchar * keys = bopomofo_select_keys[m_config.selectKeys ()];
++    for ( const gchar * p = keys; *p; ++p ) {
++        if ( *p == keyval )
++            pos = p;
++    }
++
++    if (pos == NULL)
++        return FALSE;
++
++    m_select_mode = TRUE;
++
++    guint i = pos - keys;
++    selectCandidateInPage (i);
++
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinBopomofoEditor::processBopomofo (guint keyval, guint keycode,
++                                          guint modifiers)
++{
++    if (G_UNLIKELY (cmshm_filter (modifiers) != 0))
++        return m_text ? TRUE : FALSE;
++
++    if (keyvalToBopomofo (keyval) == BOPOMOFO_ZERO)
++        return FALSE;
++
++    m_select_mode = FALSE;
++
++    return insert (keyval);
++}
++
++gboolean
++LibPinyinBopomofoEditor::processKeyEvent (guint keyval, guint keycode,
++                                          guint modifiers)
++{
++    modifiers &= (IBUS_SHIFT_MASK |
++                  IBUS_CONTROL_MASK |
++                  IBUS_MOD1_MASK |
++                  IBUS_SUPER_MASK |
++                  IBUS_HYPER_MASK |
++                  IBUS_META_MASK |
++                  IBUS_LOCK_MASK);
++
++    if (G_UNLIKELY (processGuideKey (keyval, keycode, modifiers)))
++        return TRUE;
++    if (G_UNLIKELY (processSelectKey (keyval, keycode, modifiers)))
++        return TRUE;
++    if (G_UNLIKELY (processAuxiliarySelectKey (keyval, keycode,
++                                               modifiers)))
++        return TRUE;
++    if (G_LIKELY (processBopomofo (keyval, keycode, modifiers)))
++        return TRUE;
++
++    switch (keyval) {
++    case IBUS_space:
++        m_select_mode = TRUE;
++        return processSpace (keyval, keycode, modifiers);
++
++    case IBUS_Up:        case IBUS_KP_Up:
++    case IBUS_Down:      case IBUS_KP_Down:
++    case IBUS_Page_Up:   case IBUS_KP_Page_Up:
++    case IBUS_Page_Down: case IBUS_KP_Page_Down:
++    case IBUS_Tab:
++        m_select_mode = TRUE;
++        return LibPinyinPhoneticEditor::processFunctionKey
++            (keyval, keycode, modifiers);
++
++    case IBUS_BackSpace:
++    case IBUS_Delete:    case IBUS_KP_Delete:
++    case IBUS_Left:      case IBUS_KP_Left:
++    case IBUS_Right:     case IBUS_KP_Right:
++    case IBUS_Home:      case IBUS_KP_Home:
++    case IBUS_End:       case IBUS_KP_End:
++        m_select_mode = FALSE;
++        return LibPinyinPhoneticEditor::processFunctionKey
++            (keyval, keycode, modifiers);
++
++    default:
++        return LibPinyinPhoneticEditor::processFunctionKey
++            (keyval, keycode, modifiers);
++    }
++    return FALSE;
++}
++
++void
++LibPinyinBopomofoEditor::updatePinyin (void)
++{
++    if (G_UNLIKELY (m_text.empty ())) {
++        m_pinyin_len = 0;
++        /* TODO: check whether to replace "" with NULL. */
++        pinyin_parse_more_chewings (m_instance, "");
++        return;
++    }
++
++    m_pinyin_len =
++        pinyin_parse_more_chewings (m_instance, m_text.c_str ());
++    pinyin_guess_sentence (m_instance);
++}
++
++gint
++LibPinyinBopomofoEditor::keyvalToBopomofo(gint ch)
++{
++    const gint keyboard = m_config.bopomofoKeyboardMapping ();    
++    gint len = G_N_ELEMENTS (bopomofo_keyboard[keyboard]);
++
++    for ( gint i = 0; i < len; ++i ) {
++        if ( bopomofo_keyboard[keyboard][i][0] == ch )
++            return bopomofo_keyboard[keyboard][i][1];
++    }
++
++    return BOPOMOFO_ZERO;
++}
++
++void
++LibPinyinBopomofoEditor::commit ()
++{
++    if (G_UNLIKELY (m_text.empty ()))
++        return;
++
++    m_buffer.clear ();
++
++    /* sentence candidate */
++    char *tmp = NULL;
++    pinyin_get_sentence(m_instance, &tmp);
++    if (m_props.modeSimp ()) {
++        m_buffer << tmp;
++    } else {
++        SimpTradConverter::simpToTrad (tmp, m_buffer);
++    }
++    g_free (tmp);
++
++    /* text after pinyin */
++    const gchar *p = m_text.c_str() + m_pinyin_len;
++    while (*p != '\0') {
++        if (keyvalToBopomofo (*p)) {
++            m_buffer << keyvalToBopomofo (*p);
++        } else {
++            if (G_UNLIKELY (m_props.modeFull ())) {
++                m_buffer.appendUnichar (HalfFullConverter::toFull (*p++));
++            } else {
++                m_buffer << p;
++            }
++        }
++    }
++
++    pinyin_train(m_instance);
++    LibPinyinBackEnd::instance ().modified();
++    LibPinyinPhoneticEditor::commit ((const gchar *)m_buffer);
++    reset();
++}
++
++void
++LibPinyinBopomofoEditor::updatePreeditText ()
++{
++    /* preedit text = guessed sentence + un-parsed pinyin text */
++    if (G_UNLIKELY (m_text.empty ())) {
++        hidePreeditText ();
++        return;
++    }
++
++    m_buffer.clear ();
++    char *tmp = NULL;
++    pinyin_get_sentence(m_instance, &tmp);
++    if (tmp) {
++        if (m_props.modeSimp ()) {
++            m_buffer<<tmp;
++        } else {
++            SimpTradConverter::simpToTrad (tmp, m_buffer);
++        }
++        g_free (tmp);
++        tmp = NULL;
++    }
++
++    /* append rest text */
++    const gchar *p = m_text.c_str () + m_pinyin_len;
++    m_buffer << p;
++
++    StaticText preedit_text (m_buffer);
++    /* underline */
++    preedit_text.appendAttribute (IBUS_ATTR_TYPE_UNDERLINE, IBUS_ATTR_UNDERLINE_SINGLE, 0, -1);
++
++    guint pinyin_cursor = getPinyinCursor ();
++    Editor::updatePreeditText (preedit_text, pinyin_cursor, TRUE);
++}
++
++void
++LibPinyinBopomofoEditor::updateAuxiliaryText (void)
++{
++    if (G_UNLIKELY (m_text.empty ())) {
++        hideAuxiliaryText ();
++        return;
++    }
++
++    m_buffer.clear ();
++
++    // guint pinyin_cursor = getPinyinCursor ();
++    PinyinKeyVector & pinyin_keys = m_instance->m_pinyin_keys;
++    PinyinKeyPosVector & pinyin_poses = m_instance->m_pinyin_poses;
++    for (guint i = 0; i < pinyin_keys->len; ++i) {
++        PinyinKey *key = &g_array_index (pinyin_keys, PinyinKey, i);
++        PinyinKeyPos *pos = &g_array_index (pinyin_poses, PinyinKeyPos, i);
++        guint cursor = pos->get_pos ();
++
++        if (G_UNLIKELY (cursor == m_cursor)) { /* at word boundary. */
++            m_buffer << '|' << key->get_key_zhuyin_string ();
++        } else if (G_LIKELY ( cursor < m_cursor &&
++                              m_cursor < pos->get_end_pos() )) { /* in word */
++            /* raw text */
++            String raw = m_text.substr (cursor, pos->get_length ());
++            guint offset = m_cursor - cursor;
++            m_buffer << ' ';
++            String before = raw.substr (0, offset);
++            String after = raw.substr (offset);
++            String::const_iterator iter;
++            for ( iter = before.begin (); iter != before.end (); ++iter) {
++                m_buffer << bopomofo_char[keyvalToBopomofo (*iter)];
++            }
++            m_buffer << '|';
++            for ( iter = after.begin (); iter != after.end (); ++iter) {
++                m_buffer << bopomofo_char[keyvalToBopomofo (*iter)];
++            }
++        } else { /* other words */
++            m_buffer << ' ' << key->get_key_zhuyin_string ();
++        }
++    }
++
++    if (m_cursor == m_pinyin_len)
++        m_buffer << '|';
++
++    /* append rest text */
++    const gchar * p = m_text.c_str() + m_pinyin_len;
++    m_buffer << p;
++
++    StaticText aux_text (m_buffer);
++    Editor::updateAuxiliaryText (aux_text, TRUE);
++}
++
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEditor.h ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEditor.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEditor.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEditor.h	2011-11-29 21:30:04.473033270 +0800
+@@ -0,0 +1,65 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#ifndef __PY_LIB_PINYIN_BOPOMOFO_EDITOR_H_
++#define __PY_LIB_PINYIN_BOPOMOFO_EDITOR_H_
++
++#include "PYPPhoneticEditor.h"
++
++namespace PY {
++
++class Config;
++
++#define MAX_PINYIN_LEN 64
++
++class LibPinyinBopomofoEditor : public LibPinyinPhoneticEditor {
++
++public:
++    LibPinyinBopomofoEditor (PinyinProperties & props, Config & config);
++    ~LibPinyinBopomofoEditor (void);
++
++protected:
++    String bopomofo;
++    gboolean m_select_mode;
++
++    gboolean processGuideKey (guint keyval, guint keycode, guint modifiers);
++    gboolean processAuxiliarySelectKey (guint keyval, guint keycode,
++                                        guint modifiers);
++    gboolean processSelectKey (guint keyval, guint keycode, guint modifiers);
++    gboolean processBopomofo (guint keyval, guint keycode, guint modifiers);
++    gboolean processKeyEvent (guint keyval, guint keycode, guint modifiers);
++
++
++    virtual void updatePreeditText ();
++    virtual void updateAuxiliaryText ();
++    virtual void updatePinyin (void);
++
++    void commit ();
++    void reset ();
++
++    gboolean insert (gint ch);
++    gint keyvalToBopomofo (gint ch);
++
++};
++
++};
++
++
++#endif
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEngine.cc ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEngine.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEngine.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEngine.cc	2011-11-29 21:30:04.456033483 +0800
+@@ -0,0 +1,255 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2008-2010 Peng Huang <shawn.p.huang@gmail.com>
++ * Copyright (c) 2010 BYVoid <byvoid1@gmail.com>
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#include "PYPBopomofoEngine.h"
++#include <string>
++#include "PYPunctEditor.h"
++#include "PYPBopomofoEditor.h"
++#include "PYFallbackEditor.h"
++#include "PYConfig.h"
++
++using namespace PY;
++
++/* constructor */
++LibPinyinBopomofoEngine::LibPinyinBopomofoEngine (IBusEngine *engine)
++    : Engine (engine),
++      m_props (BopomofoConfig::instance ()),
++      m_prev_pressed_key (IBUS_VoidSymbol),
++      m_input_mode (MODE_INIT),
++      m_fallback_editor (new FallbackEditor (m_props, BopomofoConfig::instance()))
++{
++    gint i;
++
++    /* create editors */
++    m_editors[MODE_INIT].reset (new LibPinyinBopomofoEditor (m_props, BopomofoConfig::instance ()));
++    m_editors[MODE_PUNCT].reset (new PunctEditor (m_props, BopomofoConfig::instance ()));
++
++    m_props.signalUpdateProperty ().connect
++        (std::bind (&LibPinyinBopomofoEngine::updateProperty, this, _1));
++
++    for (i = MODE_INIT; i < MODE_LAST; i++) {
++        connectEditorSignals (m_editors[i]);
++    }
++
++    connectEditorSignals (m_fallback_editor);
++}
++
++/* destructor */
++LibPinyinBopomofoEngine::~LibPinyinBopomofoEngine (void)
++{
++}
++
++gboolean
++LibPinyinBopomofoEngine::processKeyEvent (guint keyval, guint keycode, guint modifiers)
++{
++    gboolean retval = FALSE;
++
++    /* check Shift + Release hotkey,
++     * and then ignore other Release key event */
++    if (modifiers & IBUS_RELEASE_MASK) {
++        /* press and release keyval are same,
++         * and no other key event between the press and release key event */
++        if (m_prev_pressed_key == keyval) {
++            if (keyval == IBUS_Shift_L || keyval == IBUS_Shift_R) {
++                if (!m_editors[MODE_INIT]->text ().empty ())
++                    m_editors[MODE_INIT]->reset ();
++                m_props.toggleModeChinese ();
++                return TRUE;
++            }
++        }
++
++        if (m_input_mode == MODE_INIT &&
++            m_editors[MODE_INIT]->text ().empty ()) {
++            /* If it is init mode, and no any previous input text,
++             * we will let client applications to handle release key event */
++            return FALSE;
++        } else {
++            return TRUE;
++        }
++    }
++
++    /* Toggle simp/trad Chinese Mode when hotkey Ctrl + Shift + F pressed */
++    if (keyval == IBUS_F && scmshm_test (modifiers, (IBUS_SHIFT_MASK | IBUS_CONTROL_MASK))) {
++        m_props.toggleModeSimp();
++        m_prev_pressed_key = IBUS_F;
++        return TRUE;
++    }
++
++    if (m_props.modeChinese ()) {
++        if (G_UNLIKELY (m_input_mode == MODE_INIT &&
++                        m_editors[MODE_INIT]->text ().empty () &&
++                        cmshm_filter (modifiers) == 0 &&
++                        keyval == IBUS_grave)){
++            /* if BopomofoEditor is empty and get a grave key,
++             * switch current editor to PunctEditor */
++            m_input_mode = MODE_PUNCT;
++        }
++
++        retval = m_editors[m_input_mode]->processKeyEvent (keyval, keycode, modifiers);
++        if (G_UNLIKELY (retval &&
++                        m_input_mode != MODE_INIT &&
++                        m_editors[m_input_mode]->text ().empty ()))
++            m_input_mode = MODE_INIT;
++    }
++
++    if (G_UNLIKELY (!retval))
++        retval = m_fallback_editor->processKeyEvent (keyval, keycode, modifiers);
++
++    /* store ignored key event by editors */
++    m_prev_pressed_key = retval ? IBUS_VoidSymbol : keyval;
++
++    return retval;
++}
++
++void
++LibPinyinBopomofoEngine::focusIn (void)
++{
++    registerProperties (m_props.properties ());
++}
++
++void
++LibPinyinBopomofoEngine::focusOut (void)
++{
++    reset ();
++}
++
++void
++LibPinyinBopomofoEngine::reset (void)
++{
++    m_prev_pressed_key = IBUS_VoidSymbol;
++    m_input_mode = MODE_INIT;
++    for (gint i = 0; i < MODE_LAST; i++) {
++        m_editors[i]->reset ();
++    }
++    m_fallback_editor->reset ();
++}
++
++void
++LibPinyinBopomofoEngine::enable (void)
++{
++    m_props.reset ();
++}
++
++void
++LibPinyinBopomofoEngine::disable (void)
++{
++}
++
++void
++LibPinyinBopomofoEngine::pageUp (void)
++{
++    m_editors[m_input_mode]->pageUp ();
++}
++
++void
++LibPinyinBopomofoEngine::pageDown (void)
++{
++    m_editors[m_input_mode]->pageDown ();
++}
++
++void
++LibPinyinBopomofoEngine::cursorUp (void)
++{
++    m_editors[m_input_mode]->cursorUp ();
++}
++
++void
++LibPinyinBopomofoEngine::cursorDown (void)
++{
++    m_editors[m_input_mode]->cursorDown ();
++}
++
++inline void
++LibPinyinBopomofoEngine::showSetupDialog (void)
++{
++    g_spawn_command_line_async
++        (LIBEXECDIR"/ibus-setup-pinyin bopomofo --libpinyin", NULL);
++}
++
++gboolean
++LibPinyinBopomofoEngine::propertyActivate (const gchar *prop_name,
++                                           guint prop_state)
++{
++    const static std::string setup ("setup");
++    if (m_props.propertyActivate (prop_name, prop_state)) {
++        return TRUE;
++    }
++    else if (setup == prop_name) {
++        showSetupDialog ();
++        return TRUE;
++    }
++    return FALSE;
++}
++
++void
++LibPinyinBopomofoEngine::candidateClicked (guint index,
++                                           guint button,
++                                           guint state)
++{
++    m_editors[m_input_mode]->candidateClicked (index, button, state);
++}
++
++void
++LibPinyinBopomofoEngine::commitText (Text & text)
++{
++    Engine::commitText (text);
++    if (m_input_mode != MODE_INIT)
++        m_input_mode = MODE_INIT;
++#if 0
++    if (text.text ())
++        static_cast<FallbackEditor*> (m_fallback_editor.get ())->setPrevCommittedChar (*text.text ());
++    else
++        static_cast<FallbackEditor*> (m_fallback_editor.get ())->setPrevCommittedChar (0);
++#endif
++}
++
++void
++LibPinyinBopomofoEngine::connectEditorSignals (EditorPtr editor)
++{
++    editor->signalCommitText ().connect (
++        std::bind (&LibPinyinBopomofoEngine::commitText, this, _1));
++
++    editor->signalUpdatePreeditText ().connect (
++        std::bind (&LibPinyinBopomofoEngine::updatePreeditText, this, _1, _2, _3));
++    editor->signalShowPreeditText ().connect (
++        std::bind (&LibPinyinBopomofoEngine::showPreeditText, this));
++    editor->signalHidePreeditText ().connect (
++        std::bind (&LibPinyinBopomofoEngine::hidePreeditText, this));
++
++    editor->signalUpdateAuxiliaryText ().connect (
++        std::bind (&LibPinyinBopomofoEngine::updateAuxiliaryText, this, _1, _2));
++    editor->signalShowAuxiliaryText ().connect (
++        std::bind (&LibPinyinBopomofoEngine::showAuxiliaryText, this));
++    editor->signalHideAuxiliaryText ().connect (
++        std::bind (&LibPinyinBopomofoEngine::hideAuxiliaryText, this));
++
++    editor->signalUpdateLookupTable ().connect (
++        std::bind (&LibPinyinBopomofoEngine::updateLookupTable, this, _1, _2));
++    editor->signalUpdateLookupTableFast ().connect (
++        std::bind (&LibPinyinBopomofoEngine::updateLookupTableFast, this, _1, _2));
++    editor->signalShowLookupTable ().connect (
++        std::bind (&LibPinyinBopomofoEngine::showLookupTable, this));
++    editor->signalHideLookupTable ().connect (
++        std::bind (&LibPinyinBopomofoEngine::hideLookupTable, this));
++}
++
++
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEngine.h ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEngine.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPBopomofoEngine.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPBopomofoEngine.h	2011-11-29 21:30:04.455033496 +0800
+@@ -0,0 +1,84 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2008-2010 Peng Huang <shawn.p.huang@gmail.com>
++ * Copyright (c) 2010 BYVoid <byvoid1@gmail.com>
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#ifndef __PY_LIB_PINYIN_BOPOMOFO_ENGINE_H_
++#define __PY_LIB_PINYIN_BOPOMOFO_ENGINE_H_
++
++#include "PYEngine.h"
++#include "PYPinyinProperties.h"
++
++namespace PY {
++
++class LibPinyinBopomofoEngine : public Engine {
++public:
++    LibPinyinBopomofoEngine (IBusEngine *engine);
++    ~LibPinyinBopomofoEngine (void);
++
++    // virtual functions
++    gboolean processKeyEvent (guint keyval, guint keycode, guint modifiers);
++    void focusIn (void);
++    void focusOut (void);
++    void reset (void);
++    void enable (void);
++    void disable (void);
++    void pageUp (void);
++    void pageDown (void);
++    void cursorUp (void);
++    void cursorDown (void);
++    gboolean propertyActivate (const gchar *prop_name, guint prop_state);
++    void candidateClicked (guint index, guint button, guint state);
++
++private:
++    gboolean processPunct (guint keyval, guint keycode, guint modifiers);
++
++private:
++    void showSetupDialog (void);
++    void connectEditorSignals (EditorPtr editor);
++
++private:
++    void commitText (Text & text);
++
++private:
++    PinyinProperties m_props;
++
++    guint m_prev_pressed_key;
++
++    enum {
++        MODE_INIT = 0,          // init mode
++        MODE_PUNCT,             // punct mode
++#if 0
++        MODE_RAW,               // raw mode
++        MODE_ENGLISH,           // press v into English input mode
++        MODE_STROKE,            // press u into stroke input mode
++        MODE_EXTENSION,         // press i into extension input mode
++#endif
++        MODE_LAST,
++    } m_input_mode;
++
++    EditorPtr m_editors[MODE_LAST];
++    EditorPtr m_fallback_editor;
++};
++
++};
++
++
++#endif
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPDoublePinyinEditor.cc ibus-pinyin-1.3.99.20110706/src/PYPDoublePinyinEditor.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPDoublePinyinEditor.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPDoublePinyinEditor.cc	2011-11-29 21:30:04.461033422 +0800
+@@ -0,0 +1,162 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include "PYPDoublePinyinEditor.h"
++#include "PYConfig.h"
++#include "PYLibPinyin.h"
++
++#define DEFINE_DOUBLE_PINYIN_TABLES
++#include "PYDoublePinyinTable.h"
++
++using namespace PY;
++
++/*
++ * c in 'a' ... 'z' => id = c - 'a'
++ * c == ';'         => id = 26
++ * else             => id = -1
++ */
++#define ID(c) \
++    ((c >= IBUS_a && c <= IBUS_z) ? c - IBUS_a : (c == IBUS_semicolon ? 26 : -1))
++
++#define ID_TO_SHENG(id) \
++    (double_pinyin_map[m_config.doublePinyinSchema ()].sheng[id])
++#define ID_TO_YUNS(id) \
++    (double_pinyin_map[m_config.doublePinyinSchema ()].yun[id])
++
++#define IS_ALPHA(c) \
++        ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
++
++
++LibPinyinDoublePinyinEditor::LibPinyinDoublePinyinEditor
++( PinyinProperties & props, Config & config)
++    : LibPinyinPinyinEditor (props, config)
++{
++    m_instance = LibPinyinBackEnd::instance ().allocPinyinInstance ();
++}
++
++LibPinyinDoublePinyinEditor::~LibPinyinDoublePinyinEditor (void)
++{
++    LibPinyinBackEnd::instance ().freePinyinInstance (m_instance);
++    m_instance = NULL;
++}
++
++gboolean
++LibPinyinDoublePinyinEditor::insert (gint ch)
++{
++    /* is full */
++    if (G_UNLIKELY (m_text.length () >= MAX_PINYIN_LEN))
++        return TRUE;
++
++    gint id = ID (ch);
++    if (id == -1) {
++        /* it is not available ch */
++        return FALSE;
++    }
++
++    if (G_UNLIKELY (m_text.empty () && ID_TO_SHENG (id) == PINYIN_ID_VOID)) {
++        return FALSE;
++    }
++
++    m_text.insert (m_cursor++, ch);
++    updatePinyin ();
++    update ();
++
++    return TRUE;
++}
++
++void LibPinyinDoublePinyinEditor::reset (void)
++{
++    LibPinyinPinyinEditor::reset ();
++}
++
++gboolean
++LibPinyinDoublePinyinEditor::processKeyEvent (guint keyval, guint keycode,
++                                              guint modifiers)
++{
++    /* handle ';' key */
++    if (G_UNLIKELY (keyval == IBUS_semicolon)) {
++        if (cmshm_filter (modifiers) == 0) {
++            if (insert (keyval))
++                return TRUE;
++        }
++    }
++
++    return LibPinyinPinyinEditor::processKeyEvent (keyval, keycode, modifiers);
++}
++
++void
++LibPinyinDoublePinyinEditor::updatePinyin (void)
++{
++    if (G_UNLIKELY (m_text.empty ())) {
++        m_pinyin_len = 0;
++        /* TODO: check whether to replace "" with NULL. */
++        pinyin_parse_more_double_pinyins (m_instance, "");
++        return;
++    }
++
++    m_pinyin_len =
++        pinyin_parse_more_double_pinyins (m_instance, m_text.c_str ());
++    pinyin_guess_sentence (m_instance);
++}
++
++
++void
++LibPinyinDoublePinyinEditor::updateAuxiliaryText (void)
++{
++    if (G_UNLIKELY (m_text.empty ())) {
++        hideAuxiliaryText ();
++        return;
++    }
++
++    m_buffer.clear ();
++
++    // guint pinyin_cursor = getPinyinCursor ();
++    PinyinKeyVector & pinyin_keys = m_instance->m_pinyin_keys;
++    PinyinKeyPosVector & pinyin_poses = m_instance->m_pinyin_poses;
++    for (guint i = 0; i < pinyin_keys->len; ++i) {
++        PinyinKey *key = &g_array_index (pinyin_keys, PinyinKey, i);
++        PinyinKeyPos *pos = &g_array_index (pinyin_poses, PinyinKeyPos, i);
++        guint cursor = pos->get_pos ();
++
++        if (G_UNLIKELY (cursor == m_cursor)) { /* at word boundary. */
++            m_buffer << '|' << key->get_key_string ();
++        } else if (G_LIKELY ( cursor < m_cursor &&
++                              m_cursor < pos->get_end_pos() )) { /* in word */
++            /* raw text */
++            String raw = m_text.substr (cursor, pos->get_length ());
++            guint offset = m_cursor - cursor;
++            m_buffer << ' ' << raw.substr (0, offset)
++                     << '|' << raw.substr (offset);
++        } else { /* other words */
++            m_buffer << ' ' << key->get_key_string ();
++        }
++    }
++
++    if (m_cursor == m_pinyin_len)
++        m_buffer << '|';
++
++    /* append rest text */
++    const gchar * p = m_text.c_str() + m_pinyin_len;
++    m_buffer << p;
++
++    StaticText aux_text (m_buffer);
++    Editor::updateAuxiliaryText (aux_text, TRUE);
++}
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPDoublePinyinEditor.h ibus-pinyin-1.3.99.20110706/src/PYPDoublePinyinEditor.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPDoublePinyinEditor.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPDoublePinyinEditor.h	2011-11-29 21:30:04.459033446 +0800
+@@ -0,0 +1,49 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#ifndef __PY_LIB_PINYIN_DOUBLE_PINYIN_EDITOR_H_
++#define __PY_LIB_PINYIN_DOUBLE_PINYIN_EDITOR_H_
++
++#include "PYPPinyinEditor.h"
++
++namespace PY {
++
++class LibPinyinDoublePinyinEditor : public LibPinyinPinyinEditor {
++
++public:
++    LibPinyinDoublePinyinEditor (PinyinProperties & props, Config & config);
++    ~LibPinyinDoublePinyinEditor (void);
++
++    gboolean insert (gint ch);
++
++    /* override virtual functions */
++    gboolean processKeyEvent (guint keyval, guint keycode, guint modifiers);
++    void reset (void);
++
++protected:
++    /* TODO: to be implemented. */
++    virtual void updateAuxiliaryText (void);
++    virtual void updatePinyin (void);
++
++};
++
++};
++
++#endif
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPFullPinyinEditor.cc ibus-pinyin-1.3.99.20110706/src/PYPFullPinyinEditor.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPFullPinyinEditor.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPFullPinyinEditor.cc	2011-11-29 21:30:04.472033283 +0800
+@@ -0,0 +1,148 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include "PYPFullPinyinEditor.h"
++#include "PYConfig.h"
++#include "PYLibPinyin.h"
++
++using namespace PY;
++
++LibPinyinFullPinyinEditor::LibPinyinFullPinyinEditor
++(PinyinProperties & props, Config & config)
++    : LibPinyinPinyinEditor (props, config)
++{
++    m_instance = LibPinyinBackEnd::instance ().allocPinyinInstance ();
++}
++
++LibPinyinFullPinyinEditor::~LibPinyinFullPinyinEditor (void)
++{
++    LibPinyinBackEnd::instance ().freePinyinInstance (m_instance);
++    m_instance = NULL;
++}
++
++void
++LibPinyinFullPinyinEditor::reset (void)
++{
++    LibPinyinPinyinEditor::reset ();
++}
++
++gboolean
++LibPinyinFullPinyinEditor::insert (gint ch)
++{
++    /* is full */
++    if (G_UNLIKELY (m_text.length () >= MAX_PINYIN_LEN))
++        return TRUE;
++
++    m_text.insert (m_cursor++, ch);
++
++    updatePinyin ();
++    update ();
++    return TRUE;
++}
++
++
++gboolean
++LibPinyinFullPinyinEditor::processKeyEvent (guint keyval,
++                                            guint keycode,
++                                            guint modifiers)
++{
++    return LibPinyinPinyinEditor::processKeyEvent (keyval, keycode, modifiers);
++}
++
++void
++LibPinyinFullPinyinEditor::updatePinyin (void)
++{
++    if (G_UNLIKELY (m_text.empty ())) {
++        m_pinyin_len = 0;
++        /* TODO: check whether to replace "" with NULL. */
++        pinyin_parse_more_full_pinyins (m_instance, "");
++        return;
++    }
++
++    PinyinArray pinyins (MAX_PINYIN_LEN);
++
++    m_pinyin_len = PinyinParser::parse (m_text,               // text
++                                        m_text.length (),     // text length
++                                        m_config.option (),   // option
++                                        pinyins,              // result
++                                        MAX_PHRASE_LEN);      // max result length
++
++    /* propagate to libpinyin */
++    g_array_set_size (m_instance->m_pinyin_keys, 0);
++    g_array_set_size (m_instance->m_pinyin_poses, 0);
++
++    PinyinKey key; PinyinKeyPos pos;
++    PinyinArray::const_iterator iter = pinyins.begin ();
++    for ( ; iter != pinyins.end (); ++iter ) {
++        PinyinSegment py = *iter;
++        String pinyin = py.pinyin->sheng;
++        pinyin += py.pinyin->yun;
++        pinyin_parse_full_pinyin (m_instance, (const char *)pinyin, &key);
++        pos.set_pos (py.begin); pos.set_length (py.len);
++        g_array_append_val (m_instance->m_pinyin_keys, key);
++        g_array_append_val (m_instance->m_pinyin_poses, pos);
++    }
++
++    pinyin_guess_sentence (m_instance);
++}
++
++void
++LibPinyinFullPinyinEditor::updateAuxiliaryText ()
++{
++    if (G_UNLIKELY (m_text.empty ())) {
++        hideAuxiliaryText ();
++        return;
++    }
++
++    m_buffer.clear ();
++
++    // guint pinyin_cursor = getPinyinCursor ();
++    PinyinKeyVector & pinyin_keys = m_instance->m_pinyin_keys;
++    PinyinKeyPosVector & pinyin_poses = m_instance->m_pinyin_poses;
++    for (guint i = 0; i < pinyin_keys->len; ++i) {
++        PinyinKey *key = &g_array_index (pinyin_keys, PinyinKey, i);
++        PinyinKeyPos *pos = &g_array_index (pinyin_poses, PinyinKeyPos, i);
++        guint cursor = pos->get_pos ();
++
++        if (G_UNLIKELY (cursor == m_cursor)) { /* at word boundary. */
++            m_buffer << '|' << key->get_key_string ();
++        } else if (G_LIKELY ( cursor < m_cursor &&
++                              m_cursor < pos->get_end_pos() )) { /* in word */
++            /* raw text */
++            String raw = m_text.substr (cursor, pos->get_length ());
++            guint offset = m_cursor - cursor;
++            m_buffer << ' ' << raw.substr (0, offset)
++                     << '|' << raw.substr (offset);
++        } else { /* other words */
++            m_buffer << ' ' << key->get_key_string ();
++        }
++    }
++
++    if (m_cursor == m_pinyin_len)
++        m_buffer << '|';
++
++    /* append rest text */
++    const gchar * p = m_text.c_str() + m_pinyin_len;
++    m_buffer << p;
++
++    StaticText aux_text (m_buffer);
++    Editor::updateAuxiliaryText (aux_text, TRUE);
++}
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPFullPinyinEditor.h ibus-pinyin-1.3.99.20110706/src/PYPFullPinyinEditor.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPFullPinyinEditor.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPFullPinyinEditor.h	2011-11-29 21:30:04.442033658 +0800
+@@ -0,0 +1,51 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#ifndef __PY_LIB_PINYIN_FULL_PINYIN_EDITOR_H
++#define __PY_LIB_PINYIN_FULL_PINYIN_EDITOR_H
++
++#include "PYPPinyinEditor.h"
++
++namespace PY {
++
++class LibPinyinFullPinyinEditor : public LibPinyinPinyinEditor {
++
++public:
++    LibPinyinFullPinyinEditor (PinyinProperties & props, Config & config);
++    ~LibPinyinFullPinyinEditor (void);
++
++public:
++    gboolean insert (gint ch);
++
++    /* virtual functions */
++    virtual gboolean processKeyEvent (guint keyval, guint keycode, guint modifiers);
++    virtual void reset (void);
++    virtual void updateAuxiliaryText (void);
++
++
++protected:
++    /* TODO: to be implemented. */
++    virtual void updatePinyin (void);
++
++};
++
++};
++
++#endif
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPPhoneticEditor.cc ibus-pinyin-1.3.99.20110706/src/PYPPhoneticEditor.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPPhoneticEditor.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPPhoneticEditor.cc	2011-11-29 21:30:04.502032908 +0800
+@@ -0,0 +1,573 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#include "PYPPhoneticEditor.h"
++#include "PYConfig.h"
++#include "PYPinyinProperties.h"
++#include "PYSimpTradConverter.h"
++
++using namespace PY;
++
++/* init static members */
++LibPinyinPhoneticEditor::LibPinyinPhoneticEditor (PinyinProperties &props,
++                                                  Config &config):
++    Editor (props, config),
++    m_pinyin_len (0),
++    m_lookup_table (m_config.pageSize ())
++{
++    m_candidates = g_array_new(FALSE, TRUE, sizeof(phrase_token_t));
++}
++
++gboolean
++LibPinyinPhoneticEditor::processSpace (guint keyval, guint keycode,
++                                       guint modifiers)
++{
++    if (!m_text)
++        return FALSE;
++    if (cmshm_filter (modifiers) != 0)
++        return TRUE;
++
++    commit ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::processFunctionKey (guint keyval, guint keycode, guint modifiers)
++{
++    if (m_text.empty ())
++        return FALSE;
++
++    /* ignore numlock */
++    modifiers = cmshm_filter (modifiers);
++
++    if (modifiers != 0 && modifiers != IBUS_CONTROL_MASK)
++        return TRUE;
++
++    /* process some cursor control keys */
++    if (modifiers == 0) {  /* no modifiers. */
++        switch (keyval) {
++        case IBUS_Return:
++        case IBUS_KP_Enter:
++            commit ();
++            return TRUE;
++
++        case IBUS_BackSpace:
++            removeCharBefore ();
++            return TRUE;
++
++        case IBUS_Delete:
++        case IBUS_KP_Delete:
++            removeCharAfter ();
++            return TRUE;
++
++        case IBUS_Left:
++        case IBUS_KP_Left:
++            moveCursorLeft ();
++            return TRUE;
++
++        case IBUS_Right:
++        case IBUS_KP_Right:
++            moveCursorRight ();
++            return TRUE;
++
++        case IBUS_Home:
++        case IBUS_KP_Home:
++            moveCursorToBegin ();
++            return TRUE;
++
++        case IBUS_End:
++        case IBUS_KP_End:
++            moveCursorToEnd ();
++            return TRUE;
++
++        case IBUS_Up:
++        case IBUS_KP_Up:
++            cursorUp ();
++            return TRUE;
++
++        case IBUS_Down:
++        case IBUS_KP_Down:
++            cursorDown ();
++            return TRUE;
++
++        case IBUS_Page_Up:
++        case IBUS_KP_Page_Up:
++            pageUp ();
++            return TRUE;
++
++        case IBUS_Page_Down:
++        case IBUS_KP_Page_Down:
++        case IBUS_Tab:
++            pageDown ();
++            return TRUE;
++
++        case IBUS_Escape:
++            reset ();
++            return TRUE;
++        default:
++            return TRUE;
++        }
++    } else { /* ctrl key pressed. */
++        switch (keyval) {
++        case IBUS_BackSpace:
++            removeWordBefore ();
++            return TRUE;
++
++        case IBUS_Delete:
++        case IBUS_KP_Delete:
++            removeWordAfter ();
++            return TRUE;
++
++        case IBUS_Left:
++        case IBUS_KP_Left:
++            moveCursorLeftByWord ();
++            return TRUE;
++
++        case IBUS_Right:
++        case IBUS_KP_Right:
++            moveCursorToEnd ();
++            return TRUE;
++
++        default:
++            return TRUE;
++        }
++    }
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::processKeyEvent (guint keyval, guint keycode, guint modifiers)
++{
++    return FALSE;
++}
++
++void
++LibPinyinPhoneticEditor::updateLookupTableFast (void)
++{
++    Editor::updateLookupTableFast (m_lookup_table, TRUE);
++}
++
++void
++LibPinyinPhoneticEditor::updateLookupTable (void)
++{
++    m_lookup_table.clear ();
++
++    fillLookupTableByPage ();
++    if (m_lookup_table.size()) {
++        Editor::updateLookupTable (m_lookup_table, TRUE);
++    } else {
++        hideLookupTable ();
++    }
++}
++
++gboolean
++LibPinyinPhoneticEditor::fillLookupTableByPage (void)
++{
++
++    guint filled_nr = m_lookup_table.size ();
++    guint page_size = m_lookup_table.pageSize ();
++
++    /* fill lookup table by libpinyin guessed sentence and get candidates. */
++    guint need_nr = MIN (page_size, m_candidates->len - filled_nr);
++    g_assert (need_nr >=0);
++    if (need_nr == 0)
++        return FALSE;
++
++    String first_candidate, candidate;
++    for (guint i = filled_nr; i < filled_nr + need_nr; i++) {
++        if (i >= m_candidates->len)  /* no more candidates */
++            break;
++
++        phrase_token_t *token = &g_array_index
++            (m_candidates, phrase_token_t, i);
++
++        if (null_token == *token) {
++            /* show the rest of guessed sentence after the cursor. */
++            String buffer;
++            char *tmp = NULL;
++            pinyin_get_sentence(m_instance, &tmp);
++            if (tmp)
++                buffer = tmp;
++
++            guint lookup_cursor = getLookupCursor ();
++            candidate = first_candidate = g_utf8_offset_to_pointer
++                (buffer.c_str (), lookup_cursor);
++            if (G_UNLIKELY (!m_props.modeSimp ())) { /* Traditional Chinese */
++                candidate.truncate (0);
++                SimpTradConverter::simpToTrad (first_candidate, candidate);
++            }
++            Text text (candidate);
++            m_lookup_table.appendCandidate (text);
++            g_free (tmp);
++            continue;
++        }
++
++        char *word = NULL;
++        pinyin_translate_token(m_instance, *token, &word);
++        candidate = word;
++
++        /* remove duplicated candidates */
++        if (candidate == first_candidate) {
++            g_array_remove_index (m_candidates, i);
++            --i;
++            continue;
++        }
++
++        /* show get candidates. */
++        if (G_UNLIKELY (!m_props.modeSimp ())) { /* Traditional Chinese */
++            candidate.truncate (0);
++            SimpTradConverter::simpToTrad (word, candidate);
++        }
++        Text text (candidate);
++        m_lookup_table.appendCandidate (text);
++        g_free(word);
++    }
++
++    return TRUE;
++}
++
++void
++LibPinyinPhoneticEditor::pageUp (void)
++{
++    if (G_LIKELY (m_lookup_table.pageUp ())) {
++        updateLookupTableFast ();
++        updatePreeditText ();
++        updateAuxiliaryText ();
++    }
++}
++
++void
++LibPinyinPhoneticEditor::pageDown (void)
++{
++    if (G_LIKELY((m_lookup_table.pageDown ()) ||
++                 (fillLookupTableByPage () && m_lookup_table.pageDown()))) {
++        updateLookupTableFast ();
++        updatePreeditText ();
++        updateAuxiliaryText ();
++    }
++}
++
++void
++LibPinyinPhoneticEditor::cursorUp (void)
++{
++    if (G_LIKELY (m_lookup_table.cursorUp ())) {
++        updateLookupTableFast ();
++        updatePreeditText ();
++        updateAuxiliaryText ();
++    }
++}
++
++void
++LibPinyinPhoneticEditor::cursorDown (void)
++{
++    if (G_LIKELY ((m_lookup_table.cursorPos () == m_lookup_table.size() - 1) &&
++                  (fillLookupTableByPage () == FALSE))) {
++        return;
++    }
++
++    if (G_LIKELY (m_lookup_table.cursorDown ())) {
++        updateLookupTableFast ();
++        updatePreeditText ();
++        updateAuxiliaryText ();
++    }
++}
++
++void
++LibPinyinPhoneticEditor::candidateClicked (guint index, guint button, guint state)
++{
++    selectCandidateInPage (index);
++}
++
++void
++LibPinyinPhoneticEditor::reset (void)
++{
++    m_pinyin_len = 0;
++    m_lookup_table.clear ();
++    pinyin_reset (m_instance);
++
++    Editor::reset ();
++}
++
++void
++LibPinyinPhoneticEditor::update (void)
++{
++    guint lookup_cursor = getLookupCursor ();
++    pinyin_get_candidates (m_instance, lookup_cursor, m_candidates);
++
++    /* show guessed sentence only when m_candidates are available. */
++    if (m_candidates->len)
++        g_array_insert_val(m_candidates, 0, null_token);
++
++    updateLookupTable ();
++    updatePreeditText ();
++    updateAuxiliaryText ();
++}
++
++void
++LibPinyinPhoneticEditor::commit (const gchar *str)
++{
++    StaticText text(str);
++    commitText (text);
++}
++
++guint
++LibPinyinPhoneticEditor::getPinyinCursor ()
++{
++    /* Translate cursor position to pinyin position. */
++    PinyinKeyPosVector & pinyin_poses = m_instance->m_pinyin_poses;
++    guint pinyin_cursor = pinyin_poses->len;
++    for (size_t i = 0; i < pinyin_poses->len; ++i) {
++        PinyinKeyPos *pos = &g_array_index
++            (pinyin_poses, PinyinKeyPos, i);
++        if (pos->get_pos () <= m_cursor && m_cursor < pos->get_end_pos ())
++            pinyin_cursor = i;
++    }
++
++    g_assert (pinyin_cursor >= 0);
++    return pinyin_cursor;
++}
++
++guint
++LibPinyinPhoneticEditor::getLookupCursor (void)
++{
++    PinyinKeyVector & pinyins = m_instance->m_pinyin_keys;
++    guint lookup_cursor = getPinyinCursor ();
++    /* show candidates when pinyin cursor is at end. */
++    if (lookup_cursor == pinyins->len && m_pinyin_len == m_text.length())
++        lookup_cursor = 0;
++    return lookup_cursor;
++}
++
++gboolean
++LibPinyinPhoneticEditor::selectCandidate (guint i)
++{
++
++    if (G_UNLIKELY (i >= m_candidates->len))
++        return FALSE;
++
++    guint lookup_cursor = getLookupCursor ();
++
++    /* NOTE: deal with normal candidates selection here by libpinyin. */
++    phrase_token_t *token = &g_array_index (m_candidates, phrase_token_t, i);
++    if (null_token == *token) {
++        commit ();
++        return TRUE;
++    }
++
++    guint8 len = pinyin_choose_candidate (m_instance, lookup_cursor, *token);
++    pinyin_guess_sentence (m_instance);
++
++    PinyinKeyPosVector & pinyin_poses = m_instance->m_pinyin_poses;
++    lookup_cursor += len;
++    if (lookup_cursor == pinyin_poses->len) {
++        commit();
++        return TRUE;
++    }
++    PinyinKeyPos *pos = &g_array_index
++        (pinyin_poses, PinyinKeyPos, lookup_cursor);
++    m_cursor = pos->get_pos();
++
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::selectCandidateInPage (guint i)
++{
++    guint page_size = m_lookup_table.pageSize ();
++    guint cursor_pos = m_lookup_table.cursorPos ();
++
++    if (G_UNLIKELY (i >= page_size))
++        return FALSE;
++    i += (cursor_pos / page_size) * page_size;
++
++    return selectCandidate (i);
++}
++
++gboolean
++LibPinyinPhoneticEditor::removeCharBefore (void)
++{
++    if (G_UNLIKELY (m_cursor == 0))
++        return FALSE;
++
++    m_cursor --;
++    m_text.erase (m_cursor, 1);
++
++    updatePinyin ();
++    update ();
++
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::removeCharAfter (void)
++{
++    if (G_UNLIKELY (m_cursor == m_text.length ()))
++        return FALSE;
++
++    m_text.erase (m_cursor, 1);
++
++    updatePinyin ();
++    update ();
++
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::moveCursorLeft (void)
++{
++    if (G_UNLIKELY (m_cursor == 0))
++        return FALSE;
++
++    m_cursor --;
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::moveCursorRight (void)
++{
++    if (G_UNLIKELY (m_cursor == m_text.length ()))
++        return FALSE;
++
++    m_cursor ++;
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::moveCursorToBegin (void)
++{
++    if (G_UNLIKELY (m_cursor == 0))
++        return TRUE;
++
++    m_cursor = 0;
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::moveCursorToEnd (void)
++{
++    if (G_UNLIKELY (m_cursor == m_text.length ()))
++        return FALSE;
++
++    m_cursor = m_text.length ();
++    update ();
++    return TRUE;
++}
++
++
++/* move cursor by word functions */
++
++guint
++LibPinyinPhoneticEditor::getCursorLeftByWord (void)
++{
++    guint cursor;
++
++    if (G_UNLIKELY (m_cursor > m_pinyin_len)) {
++        cursor = m_pinyin_len;
++    } else {
++        PinyinKeyPosVector & pinyin_poses = m_instance->m_pinyin_poses;
++        guint pinyin_cursor = getPinyinCursor ();
++        PinyinKeyPos *pos = &g_array_index
++            (pinyin_poses, PinyinKeyPos, pinyin_cursor);
++        cursor = pos->m_pos;
++
++        /* cursor at the begin of one pinyin */
++        g_return_val_if_fail (pinyin_cursor > 0, 0);
++        if ( cursor == m_cursor) {
++            pos = &g_array_index
++                (pinyin_poses, PinyinKeyPos, pinyin_cursor - 1);
++            cursor = pos->m_pos;
++        }
++    }
++
++    return cursor;
++}
++
++guint
++LibPinyinPhoneticEditor::getCursorRightByWord (void)
++{
++    guint cursor;
++
++    if (G_UNLIKELY (m_cursor > m_pinyin_len)) {
++        cursor = m_text.length ();
++    } else {
++        guint pinyin_cursor = getPinyinCursor ();
++        PinyinKeyPos *pos = &g_array_index
++            (m_instance->m_pinyin_poses, PinyinKeyPos, pinyin_cursor);
++        cursor = pos->get_end_pos ();
++    }
++
++    return cursor;
++}
++
++gboolean
++LibPinyinPhoneticEditor::removeWordBefore (void)
++{
++    if (G_UNLIKELY (m_cursor == 0))
++        return FALSE;
++
++    guint cursor = getCursorLeftByWord ();
++    m_text.erase (cursor, m_cursor - cursor);
++    m_cursor = cursor;
++    updatePinyin ();
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::removeWordAfter (void)
++{
++    if (G_UNLIKELY (m_cursor == m_text.length ()))
++        return FALSE;
++
++    guint cursor = getCursorRightByWord ();
++    m_text.erase (m_cursor, cursor - m_cursor);
++    updatePinyin ();
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::moveCursorLeftByWord (void)
++{
++    if (G_UNLIKELY (m_cursor == 0))
++        return FALSE;
++
++    guint cursor = getCursorLeftByWord ();
++
++    m_cursor = cursor;
++    update ();
++    return TRUE;
++}
++
++gboolean
++LibPinyinPhoneticEditor::moveCursorRightByWord (void)
++{
++    if (G_UNLIKELY (m_cursor == m_text.length ()))
++        return FALSE;
++
++    guint cursor = getCursorRightByWord ();
++
++    m_cursor = cursor;
++    update ();
++    return TRUE;
++}
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPPhoneticEditor.h ibus-pinyin-1.3.99.20110706/src/PYPPhoneticEditor.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPPhoneticEditor.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPPhoneticEditor.h	2011-11-29 21:30:04.500032933 +0800
+@@ -0,0 +1,98 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#ifndef __PY_LIB_PINYIN_BASE_EDITOR_H_
++#define __PY_LIB_PINYIN_BASE_EDITOR_H_
++
++#include <pinyin.h>
++#include "PYLookupTable.h"
++#include "PYEditor.h"
++#include "PYPinyinParser.h"
++
++
++namespace PY {
++
++class LibPinyinPhoneticEditor : public Editor {
++public:
++    LibPinyinPhoneticEditor (PinyinProperties & props, Config & config);
++
++public:
++    /* virtual functions */
++    virtual void pageUp (void);
++    virtual void pageDown (void);
++    virtual void cursorUp (void);
++    virtual void cursorDown (void);
++    virtual void update (void);
++    virtual void reset (void);
++    virtual void candidateClicked (guint index, guint button, guint state);
++    virtual gboolean processKeyEvent (guint keyval, guint keycode, guint modifiers);
++    virtual gboolean processSpace (guint keyval, guint keycode, guint modifiers);
++    virtual gboolean processFunctionKey (guint keyval, guint keycode, guint modifiers);
++    virtual void updateLookupTable ();
++    virtual void updateLookupTableFast ();
++    virtual gboolean fillLookupTableByPage ();
++
++protected:
++    gboolean selectCandidate (guint i);
++    gboolean selectCandidateInPage (guint i);
++
++    void commit (const gchar *str);
++    guint getPinyinCursor (void);
++    guint getLookupCursor (void);
++
++    /* inline functions */
++
++    /* pure virtual functions */
++    virtual gboolean insert (gint ch) = 0;
++    virtual gboolean removeCharBefore (void);
++    virtual gboolean removeCharAfter (void);
++    virtual gboolean removeWordBefore (void);
++    virtual gboolean removeWordAfter (void);
++    virtual gboolean moveCursorLeft (void);
++    virtual gboolean moveCursorRight (void);
++    virtual gboolean moveCursorLeftByWord (void);
++    virtual gboolean moveCursorRightByWord (void);
++    virtual gboolean moveCursorToBegin (void);
++    virtual gboolean moveCursorToEnd (void);
++    virtual void commit (void) = 0;
++    virtual void updateAuxiliaryText (void) = 0;
++    virtual void updatePreeditText (void) = 0;
++    virtual void updatePinyin (void) = 0;
++
++    guint getCursorLeftByWord (void);
++    guint getCursorRightByWord (void);
++
++
++    /* varibles */
++#if 0
++    PinyinArray                 m_pinyins;
++#endif
++    guint                       m_pinyin_len;
++    LookupTable                 m_lookup_table;
++    String                      m_buffer;
++
++    /* use LibPinyinBackEnd here. */
++    pinyin_instance_t           *m_instance;
++    TokenVector                 m_candidates;
++};
++
++};
++
++#endif
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEditor.cc ibus-pinyin-1.3.99.20110706/src/PYPPinyinEditor.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEditor.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPPinyinEditor.cc	2011-11-29 21:30:04.498032959 +0800
+@@ -0,0 +1,307 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include "PYPPinyinEditor.h"
++#include "PYConfig.h"
++#include "PYPinyinProperties.h"
++#include "PYSimpTradConverter.h"
++#include "PYHalfFullConverter.h"
++#include "PYLibPinyin.h"
++
++using namespace PY;
++
++/* init static members*/
++LibPinyinPinyinEditor::LibPinyinPinyinEditor (PinyinProperties & props,
++                                              Config & config)
++    : LibPinyinPhoneticEditor (props, config)
++{
++}
++
++
++/**
++ * process pinyin
++ */
++inline gboolean
++LibPinyinPinyinEditor::processPinyin (guint keyval, guint keycode,
++                                      guint modifiers)
++{
++    if (G_UNLIKELY (cmshm_filter (modifiers) != 0))
++        return m_text ? TRUE : FALSE;
++
++    return insert (keyval);
++}
++
++/**
++ * process numbers
++ */
++inline gboolean
++LibPinyinPinyinEditor::processNumber (guint keyval, guint keycode,
++                                      guint modifiers)
++{
++    guint i;
++
++    if (m_text.empty ())
++        return FALSE;
++
++    switch (keyval) {
++    case IBUS_0:
++    case IBUS_KP_0:
++        i = 9;
++        break;
++    case IBUS_1 ... IBUS_9:
++        i = keyval - IBUS_1;
++        break;
++    case IBUS_KP_1 ... IBUS_KP_9:
++        i = keyval - IBUS_KP_1;
++        break;
++    default:
++        g_return_val_if_reached (FALSE);
++    }
++
++    if (modifiers == 0)
++        selectCandidateInPage (i);
++
++    update ();
++    return TRUE;
++}
++
++inline gboolean
++LibPinyinPinyinEditor::processPunct (guint keyval, guint keycode,
++                                     guint modifiers)
++{
++    if (m_text.empty ())
++        return FALSE;
++
++    if (cmshm_filter (modifiers) != 0)
++        return TRUE;
++
++    switch (keyval) {
++    case IBUS_apostrophe:
++        return insert (keyval);
++    case IBUS_comma:
++        if (m_config.commaPeriodPage ()) {
++            pageUp ();
++            return TRUE;
++        }
++        break;
++    case IBUS_minus:
++        if (m_config.minusEqualPage ()) {
++            pageUp ();
++            return TRUE;
++        }
++        break;
++    case IBUS_period:
++        if (m_config.commaPeriodPage ()) {
++            pageDown ();
++            return TRUE;
++        }
++        break;
++    case IBUS_equal:
++        if (m_config.minusEqualPage ()) {
++            pageDown ();
++            return TRUE;
++        }
++        break;
++    }
++
++#if 0
++    if (m_config.autoCommit ()) {
++        if (m_lookup_table.size ()) {
++            /* TODO: check here. */
++            selectCandidate (m_lookup_table.cursorPos ());
++        }
++        commit ();
++        return FALSE;
++    }
++#endif
++
++    return TRUE;
++}
++
++inline gboolean
++LibPinyinPinyinEditor::processFunctionKey (guint keyval, guint keycode,
++                                           guint modifiers)
++{
++    if (m_text.empty ())
++        return FALSE;
++
++    /* ignore numlock */
++    modifiers = cmshm_filter (modifiers);
++
++    if (modifiers != 0 && modifiers != IBUS_CONTROL_MASK)
++        return TRUE;
++
++    /* process some cursor control keys */
++    if (modifiers == 0) { /* no modifiers. */
++        switch (keyval) {
++        case IBUS_Shift_L:
++            if (!m_config.shiftSelectCandidate ())
++                return FALSE;
++            selectCandidateInPage (1);
++            return TRUE;
++
++        case IBUS_Shift_R:
++            if (!m_config.shiftSelectCandidate ())
++                return FALSE;
++            selectCandidateInPage (2);
++            return TRUE;
++        }
++    }
++
++    return LibPinyinPhoneticEditor::processFunctionKey (keyval, keycode,
++                                                        modifiers);
++}
++
++gboolean
++LibPinyinPinyinEditor::processKeyEvent (guint keyval, guint keycode,
++                                        guint modifiers)
++{
++    modifiers &= (IBUS_SHIFT_MASK |
++                  IBUS_CONTROL_MASK |
++                  IBUS_MOD1_MASK |
++                  IBUS_SUPER_MASK |
++                  IBUS_HYPER_MASK |
++                  IBUS_META_MASK |
++                  IBUS_LOCK_MASK);
++
++    switch (keyval) {
++    /* letters */
++    case IBUS_a ... IBUS_z:
++        return processPinyin (keyval, keycode, modifiers);
++    case IBUS_0 ... IBUS_9:
++    case IBUS_KP_0 ... IBUS_KP_9:
++        return processNumber (keyval, keycode, modifiers);
++    case IBUS_exclam ... IBUS_slash:
++    case IBUS_colon ... IBUS_at:
++    case IBUS_bracketleft ... IBUS_quoteleft:
++    case IBUS_braceleft ... IBUS_asciitilde:
++        return processPunct (keyval, keycode, modifiers);
++    case IBUS_space:
++        return processSpace (keyval, keycode, modifiers);
++    default:
++        return processFunctionKey (keyval, keycode, modifiers);
++    }
++}
++
++void
++LibPinyinPinyinEditor::commit ()
++{
++    if (G_UNLIKELY (m_text.empty ()))
++        return;
++
++    m_buffer.clear ();
++
++    /* sentence candidate */
++    char *tmp = NULL;
++    pinyin_get_sentence(m_instance, &tmp);
++    if (m_props.modeSimp ()) {
++        m_buffer << tmp;
++    } else {
++        SimpTradConverter::simpToTrad (tmp, m_buffer);
++    }
++    g_free (tmp);
++
++    /* text after pinyin */
++    const gchar *p = m_text.c_str() + m_pinyin_len;
++    if (G_UNLIKELY (m_props.modeFull ())) {
++        while (*p != '\0') {
++            m_buffer.appendUnichar (HalfFullConverter::toFull (*p++));
++        }
++    } else {
++        m_buffer << p;
++    }
++
++    pinyin_train(m_instance);
++    LibPinyinBackEnd::instance ().modified ();
++    LibPinyinPhoneticEditor::commit ((const gchar *)m_buffer);
++    reset();
++}
++
++void
++LibPinyinPinyinEditor::updatePreeditText ()
++{
++    /* preedit text = guessed sentence + un-parsed pinyin text */
++    if (G_UNLIKELY (m_text.empty ())) {
++        hidePreeditText ();
++        return;
++    }
++
++    m_buffer.clear ();
++    char *tmp = NULL;
++    pinyin_get_sentence(m_instance, &tmp);
++    if (tmp) {
++        if (m_props.modeSimp ()) {
++            m_buffer<<tmp;
++        } else {
++            SimpTradConverter::simpToTrad (tmp, m_buffer);
++        }
++        g_free (tmp);
++        tmp = NULL;
++    }
++
++    /* append rest text */
++    const gchar *p = m_text.c_str () + m_pinyin_len;
++    m_buffer << p;
++
++    StaticText preedit_text (m_buffer);
++    /* underline */
++    preedit_text.appendAttribute (IBUS_ATTR_TYPE_UNDERLINE, IBUS_ATTR_UNDERLINE_SINGLE, 0, -1);
++
++    guint pinyin_cursor = getPinyinCursor ();
++    Editor::updatePreeditText (preedit_text, pinyin_cursor, TRUE);
++}
++
++void
++LibPinyinPinyinEditor::updateAuxiliaryText ()
++{
++    if (G_UNLIKELY (m_text.empty ())) {
++        hideAuxiliaryText ();
++        return;
++    }
++
++    m_buffer.clear ();
++
++    /* Note: cursor handling is defered to full/double pinyin editors. */
++    // guint pinyin_cursor = getPinyinCursor ();
++    PinyinKeyVector & pinyin_keys = m_instance->m_pinyin_keys;
++    for (guint i = 0; i < pinyin_keys->len; ++i) {
++        if (G_LIKELY (i))
++            m_buffer << ' ';
++        PinyinKey *key = &g_array_index (pinyin_keys, PinyinKey, i);
++        m_buffer << key->get_key_string ();
++    }
++
++    /* append rest text */
++    const gchar *p = m_text.c_str() + m_pinyin_len;
++    m_buffer << p;
++
++    StaticText aux_text (m_buffer);
++    Editor::updateAuxiliaryText (aux_text, TRUE);
++}
++
++void
++LibPinyinPinyinEditor::updateLookupTable ()
++{
++    m_lookup_table.setPageSize (m_config.pageSize ());
++    m_lookup_table.setOrientation (m_config.orientation ());
++    LibPinyinPhoneticEditor::updateLookupTable ();
++}
++
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEditor.h ibus-pinyin-1.3.99.20110706/src/PYPPinyinEditor.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEditor.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPPinyinEditor.h	2011-11-29 21:30:04.497032972 +0800
+@@ -0,0 +1,56 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#ifndef __PY_LIB_PINYIN_PINYIN_EDITOR_H_
++#define __PY_LIB_PINYIN_PINYIN_EDITOR_H_
++
++#include "PYPPhoneticEditor.h"
++
++namespace PY {
++
++#define MAX_PINYIN_LEN 64
++
++class Config;
++
++class LibPinyinPinyinEditor : public LibPinyinPhoneticEditor {
++public:
++    LibPinyinPinyinEditor (PinyinProperties & props, Config & config);
++
++
++protected:
++    gboolean processPinyin (guint keyval, guint keycode, guint modifiers);
++    gboolean processNumber (guint keyval, guint keycode, guint modifiers);
++    gboolean processPunct (guint keyval, guint keycode, guint modifiers);
++    gboolean processFunctionKey (guint keyval, guint keycode, guint modifiers);
++
++    void commit ();
++
++    virtual void updateAuxiliaryText (void);
++    virtual void updateLookupTable (void);
++    virtual void updatePreeditText (void);
++
++    virtual gboolean processKeyEvent (guint keyval, guint keycode, guint modifiers);
++
++    virtual void updatePinyin (void) = 0;
++};
++
++};
++
++#endif
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEngine.cc ibus-pinyin-1.3.99.20110706/src/PYPPinyinEngine.cc
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEngine.cc	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPPinyinEngine.cc	2011-11-29 21:30:04.460033434 +0800
+@@ -0,0 +1,316 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2008-2010 Peng Huang <shawn.p.huang@gmail.com>
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#include "PYPPinyinEngine.h"
++#include <string>
++#include "PYConfig.h"
++#include "PYPunctEditor.h"
++#include "PYRawEditor.h"
++#ifdef IBUS_BUILD_LUA_EXTENSION
++#include "PYExtEditor.h"
++#endif
++#ifdef IBUS_BUILD_ENGLISH_INPUT_MODE
++#include "PYEnglishEditor.h"
++#endif
++#include "PYPFullPinyinEditor.h"
++#include "PYPDoublePinyinEditor.h"
++#include "PYFallbackEditor.h"
++
++using namespace PY;
++
++/* constructor */
++LibPinyinPinyinEngine::LibPinyinPinyinEngine (IBusEngine *engine)
++    : Engine (engine),
++      m_props (PinyinConfig::instance ()),
++      m_prev_pressed_key (IBUS_VoidSymbol),
++      m_input_mode (MODE_INIT),
++      m_fallback_editor (new FallbackEditor (m_props, PinyinConfig::instance ()))
++{
++    gint i;
++
++    m_double_pinyin = PinyinConfig::instance ().doublePinyin ();
++
++    if (m_double_pinyin)
++        m_editors[MODE_INIT].reset
++            (new LibPinyinDoublePinyinEditor (m_props, PinyinConfig::instance ()));
++    else
++        m_editors[MODE_INIT].reset
++            (new LibPinyinFullPinyinEditor (m_props, PinyinConfig::instance ()));
++
++    m_editors[MODE_PUNCT].reset
++        (new PunctEditor (m_props, PinyinConfig::instance ()));
++    m_editors[MODE_RAW].reset
++        (new RawEditor (m_props, PinyinConfig::instance ()));
++
++#ifdef IBUS_BUILD_LUA_EXTENSION
++    m_editors[MODE_EXTENSION].reset (new ExtEditor (m_props, PinyinConfig::instance ()));
++#else
++    m_editors[MODE_EXTENSION].reset (new Editor (m_props, PinyinConfig::instance ()));
++#endif
++#ifdef IBUS_BUILD_ENGLISH_INPUT_MODE
++    m_editors[MODE_ENGLISH].reset (new EnglishEditor (m_props, PinyinConfig::instance ()));
++#else
++    m_editors[MODE_ENGLISH].reset (new Editor (m_props, PinyinConfig::instance ()));
++#endif
++
++    m_props.signalUpdateProperty ().connect
++        (std::bind (&LibPinyinPinyinEngine::updateProperty, this, _1));
++
++    for (i = MODE_INIT; i < MODE_LAST; i++) {
++        connectEditorSignals (m_editors[i]);
++    }
++
++    connectEditorSignals (m_fallback_editor);
++}
++
++/* destructor */
++LibPinyinPinyinEngine::~LibPinyinPinyinEngine (void)
++{
++}
++
++gboolean
++LibPinyinPinyinEngine::processKeyEvent (guint keyval, guint keycode, guint modifiers)
++{
++    gboolean retval = FALSE;
++
++    /* check Shift + Release hotkey,
++     * and then ignore other Release key event */
++    if (modifiers & IBUS_RELEASE_MASK) {
++        /* press and release keyval are same,
++         * and no other key event between the press and release key event */
++        if (m_prev_pressed_key == keyval){
++            if (keyval == IBUS_Shift_L || keyval == IBUS_Shift_R) {
++                if (!m_editors[MODE_INIT]->text ().empty ())
++                    m_editors[MODE_INIT]->reset ();
++                m_props.toggleModeChinese ();
++                return TRUE;
++            }
++        }
++
++        if (m_input_mode == MODE_INIT &&
++            m_editors[MODE_INIT]->text ().empty ()) {
++            /* If it is in init mode, and  no any previous input text,
++             * we will let client applications to handle release key event */
++            return FALSE;
++        }
++        else {
++            return TRUE;
++        }
++    }
++
++    /* Toggle simp/trad Chinese Mode when hotkey Ctrl + Shift + F pressed */
++    if (keyval == IBUS_F && scmshm_test (modifiers, (IBUS_SHIFT_MASK | IBUS_CONTROL_MASK))) {
++        m_props.toggleModeSimp ();
++        m_prev_pressed_key = IBUS_F;
++        return TRUE;
++    }
++
++    if (m_props.modeChinese ()) {
++        if (m_input_mode == MODE_INIT &&
++            (cmshm_filter (modifiers) == 0)) {
++            const String & text = m_editors[MODE_INIT]->text ();
++            if (text.empty ()) {
++                switch (keyval) {
++                case IBUS_grave:
++                    m_input_mode = MODE_PUNCT;
++                    break;
++#ifdef IBUS_BUILD_LUA_EXTENSION
++                case IBUS_i:
++                    // do not enable lua extension when use double pinyin.
++                    if (PinyinConfig::instance ().doublePinyin ())
++                        break;
++                    m_input_mode = MODE_EXTENSION;
++                    break;
++#endif
++#ifdef IBUS_BUILD_ENGLISH_INPUT_MODE
++                case IBUS_v:
++                    // do not enable english mode when use double pinyin.
++                    if (PinyinConfig::instance ().doublePinyin ())
++                        break;
++                    m_input_mode = MODE_ENGLISH;
++                    break;
++#endif
++                }
++            } else {
++                /* TODO: Unknown */
++            }
++        }
++        retval = m_editors[m_input_mode]->processKeyEvent (keyval, keycode, modifiers);
++        if (G_UNLIKELY (retval &&
++                        m_input_mode != MODE_INIT &&
++                        m_editors[m_input_mode]->text ().empty ()))
++            m_input_mode = MODE_INIT;
++    }
++
++    if (G_UNLIKELY (!retval))
++        retval = m_fallback_editor->processKeyEvent (keyval, keycode, modifiers);
++
++    /* store ignored key event by editors */
++    m_prev_pressed_key = retval ? IBUS_VoidSymbol : keyval;
++
++    return retval;
++}
++
++void
++LibPinyinPinyinEngine::focusIn (void)
++{
++    /* TODO: check memory leak here,
++     *       or switch full/double pinyin when pinyin config is changed.*/
++    if (PinyinConfig::instance ().doublePinyin ()) {
++        if (!m_double_pinyin) {
++            m_editors[MODE_INIT].reset (new LibPinyinDoublePinyinEditor (m_props, PinyinConfig::instance ()));
++            connectEditorSignals (m_editors[MODE_INIT]);
++        }
++        m_double_pinyin = TRUE;
++    }
++    else {
++        if (m_double_pinyin) {
++            m_editors[MODE_INIT].reset (new LibPinyinFullPinyinEditor (m_props, PinyinConfig::instance ()));
++            connectEditorSignals (m_editors[MODE_INIT]);
++        }
++        m_double_pinyin = FALSE;
++    }
++
++    registerProperties (m_props.properties ());
++}
++
++void
++LibPinyinPinyinEngine::focusOut (void)
++{
++    reset ();
++}
++
++void
++LibPinyinPinyinEngine::reset (void)
++{
++    m_prev_pressed_key = IBUS_VoidSymbol;
++    m_input_mode = MODE_INIT;
++    for (gint i = 0; i < MODE_LAST; i++) {
++        m_editors[i]->reset ();
++    }
++    m_fallback_editor->reset ();
++}
++
++void
++LibPinyinPinyinEngine::enable (void)
++{
++    m_props.reset ();
++}
++
++void
++LibPinyinPinyinEngine::disable (void)
++{
++}
++
++void
++LibPinyinPinyinEngine::pageUp (void)
++{
++    m_editors[m_input_mode]->pageUp ();
++}
++
++void
++LibPinyinPinyinEngine::pageDown (void)
++{
++    m_editors[m_input_mode]->pageDown ();
++}
++
++void
++LibPinyinPinyinEngine::cursorUp (void)
++{
++    m_editors[m_input_mode]->cursorUp ();
++}
++
++void
++LibPinyinPinyinEngine::cursorDown (void)
++{
++    m_editors[m_input_mode]->cursorDown ();
++}
++
++inline void
++LibPinyinPinyinEngine::showSetupDialog (void)
++{
++    g_spawn_command_line_async
++        (LIBEXECDIR"/ibus-setup-pinyin pinyin --libpinyin", NULL);
++}
++
++gboolean
++LibPinyinPinyinEngine::propertyActivate (const char *prop_name, guint prop_state)
++{
++    const static String setup ("setup");
++    if (m_props.propertyActivate (prop_name, prop_state)) {
++        return TRUE;
++    }
++    else if (setup == prop_name) {
++        showSetupDialog ();
++        return TRUE;
++    }
++    return FALSE;
++}
++
++void
++LibPinyinPinyinEngine::candidateClicked (guint index, guint button, guint state)
++{
++    m_editors[m_input_mode]->candidateClicked (index, button, state);
++}
++
++void
++LibPinyinPinyinEngine::commitText (Text & text)
++{
++    Engine::commitText (text);
++    if (m_input_mode != MODE_INIT)
++        m_input_mode = MODE_INIT;
++#if 0
++    if (text.text ())
++        static_cast<FallbackEditor*> (m_fallback_editor.get ())->setPrevCommittedChar (*text.text ());
++    else
++        static_cast<FallbackEditor*> (m_fallback_editor.get ())->setPrevCommittedChar (0);
++#endif
++}
++
++void
++LibPinyinPinyinEngine::connectEditorSignals (EditorPtr editor)
++{
++    editor->signalCommitText ().connect (
++        std::bind (&LibPinyinPinyinEngine::commitText, this, _1));
++
++    editor->signalUpdatePreeditText ().connect (
++        std::bind (&LibPinyinPinyinEngine::updatePreeditText, this, _1, _2, _3));
++    editor->signalShowPreeditText ().connect (
++        std::bind (&LibPinyinPinyinEngine::showPreeditText, this));
++    editor->signalHidePreeditText ().connect (
++        std::bind (&LibPinyinPinyinEngine::hidePreeditText, this));
++
++    editor->signalUpdateAuxiliaryText ().connect (
++        std::bind (&LibPinyinPinyinEngine::updateAuxiliaryText, this, _1, _2));
++    editor->signalShowAuxiliaryText ().connect (
++        std::bind (&LibPinyinPinyinEngine::showAuxiliaryText, this));
++    editor->signalHideAuxiliaryText ().connect (
++        std::bind (&LibPinyinPinyinEngine::hideAuxiliaryText, this));
++
++    editor->signalUpdateLookupTable ().connect (
++        std::bind (&LibPinyinPinyinEngine::updateLookupTable, this, _1, _2));
++    editor->signalUpdateLookupTableFast ().connect (
++        std::bind (&LibPinyinPinyinEngine::updateLookupTableFast, this, _1, _2));
++    editor->signalShowLookupTable ().connect (
++        std::bind (&LibPinyinPinyinEngine::showLookupTable, this));
++    editor->signalHideLookupTable ().connect (
++        std::bind (&LibPinyinPinyinEngine::hideLookupTable, this));
++}
+diff -Naur ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEngine.h ibus-pinyin-1.3.99.20110706/src/PYPPinyinEngine.h
+--- ibus-pinyin-1.3.99.20110706.orig/src/PYPPinyinEngine.h	1970-01-01 08:00:00.000000000 +0800
++++ ibus-pinyin-1.3.99.20110706/src/PYPPinyinEngine.h	2011-11-29 21:30:04.453033522 +0800
+@@ -0,0 +1,82 @@
++/* vim:set et ts=4 sts=4:
++ *
++ * ibus-pinyin - The Chinese PinYin engine for IBus
++ *
++ * Copyright (c) 2008-2010 Peng Huang <shawn.p.huang@gmail.com>
++ * Copyright (c) 2011 Peng Wu <alexepico@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++#ifndef __PY_LIB_PINYIN_PINYIN_ENGINE_H_
++#define __PY_LIB_PINYIN_PINYIN_ENGINE_H_
++
++#include "PYEngine.h"
++#include "PYPinyinProperties.h"
++
++namespace PY {
++class LibPinyinPinyinEngine : public Engine {
++public:
++    LibPinyinPinyinEngine (IBusEngine *engine);
++    ~LibPinyinPinyinEngine (void);
++
++    //virtual functions
++    gboolean processKeyEvent (guint keyval, guint keycode, guint modifiers);
++    void focusIn (void);
++    void focusOut (void);
++    void reset (void);
++    void enable (void);
++    void disable (void);
++    void pageUp (void);
++    void pageDown (void);
++    void cursorUp (void);
++    void cursorDown (void);
++    gboolean propertyActivate (const gchar *prop_name, guint prop_state);
++    void candidateClicked (guint index, guint button, guint state);
++
++private:
++    gboolean processPunct (guint keyval, guint keycode, guint modifiers);
++
++    void showSetupDialog (void);
++    void connectEditorSignals (EditorPtr editor);
++
++    void commitText (Text & text);
++
++private:
++    PinyinProperties m_props;
++
++    guint m_prev_pressed_key;
++
++    enum {
++        MODE_INIT = 0,          // init mode
++        MODE_PUNCT,             // punct mode
++        MODE_RAW,               // raw mode
++        MODE_ENGLISH,           // press v into English input mode
++    #if 0
++        MODE_STROKE,            // press u into stroke input mode
++    #endif
++        MODE_EXTENSION,         // press i into extension input mode
++        MODE_LAST,
++    } m_input_mode;
++
++    gboolean m_double_pinyin;
++
++    EditorPtr m_editors[MODE_LAST];
++    EditorPtr m_fallback_editor;
++
++};
++
++};
++
++#endif

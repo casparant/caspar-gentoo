@@ -1,0 +1,33 @@
+diff -aur tangogps-0.99.4/src/friends.c tangogps-0.99.4.new//src/friends.c
+--- tangogps-0.99.4/src/friends.c	2010-06-25 17:40:04.000000000 +0800
++++ tangogps-0.99.4.new//src/friends.c	2011-09-07 22:43:33.278316781 +0800
+@@ -17,7 +17,6 @@
+ #include <gtk/gtk.h>
+ 
+ #include <curl/curl.h>
+-#include <curl/types.h>
+ #include <curl/easy.h>
+ 
+ 
+diff -aur tangogps-0.99.4/src/tile_management.c tangogps-0.99.4.new//src/tile_management.c
+--- tangogps-0.99.4/src/tile_management.c	2010-06-25 17:40:05.000000000 +0800
++++ tangogps-0.99.4.new//src/tile_management.c	2011-09-07 22:43:24.349428407 +0800
+@@ -5,7 +5,6 @@
+ #include <glib/gprintf.h>
+ #include <string.h>
+ #include <curl/curl.h>
+-#include <curl/types.h> 
+ #include <curl/easy.h> 
+ #include <math.h>
+ #include "globals.h"
+diff -aur tangogps-0.99.4/src/util.h tangogps-0.99.4.new//src/util.h
+--- tangogps-0.99.4/src/util.h	2009-11-06 20:16:05.000000000 +0800
++++ tangogps-0.99.4.new//src/util.h	2011-09-07 22:43:28.368378166 +0800
+@@ -2,7 +2,6 @@
+ #include <gtk/gtk.h>
+ 
+ #include <curl/curl.h>
+-#include <curl/types.h>
+ #include <curl/easy.h>
+ int
+ sql_execute(char *db_name, char *sql, int (*cb_func)(void*,int,char**,char**));
