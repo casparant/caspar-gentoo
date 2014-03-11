@@ -1,0 +1,125 @@
+diff -Naur WizQTClient-2.0.64.orig/src/CMakeLists.txt WizQTClient-2.0.64/src/CMakeLists.txt
+--- WizQTClient-2.0.64.orig/src/CMakeLists.txt	2014-03-11 15:34:37.828199401 +0800
++++ WizQTClient-2.0.64/src/CMakeLists.txt	2014-03-11 15:35:06.024200216 +0800
+@@ -380,6 +380,7 @@
+ )
+ 
+ target_link_libraries(${PROJECT_NAME}
++    dl
+     quazip
+     cryptlib
+     clucene-core-static
+diff -Naur WizQTClient-2.0.64.orig/src/wizmainwindow.cpp WizQTClient-2.0.64/src/wizmainwindow.cpp
+--- WizQTClient-2.0.64.orig/src/wizmainwindow.cpp	2014-03-11 15:34:37.829199401 +0800
++++ WizQTClient-2.0.64/src/wizmainwindow.cpp	2014-03-11 15:34:50.344199763 +0800
+@@ -126,6 +126,19 @@
+     initToolBar();
+     initClient();
+ 
++    // system tray
++    this->systemTray=new QSystemTrayIcon();
++    this->systemTray->setIcon(QIcon(WizGetResourcesPath() + "skins/wizupdater.png"));
++    this->systemTray->show();
++    QMenu *menu = new QMenu;
++    QAction *close, *logcat;
++    logcat = menu->addAction(QIcon(WizGetResourcesPath()+"skins/logout.png"), tr("Logout"), this, SLOT(on_actionLogout_triggered()));
++    logcat->setData(QString("logcat"));
++    close = menu->addAction(QIcon(WizGetResourcesPath()+"skins/exit.png"), tr("Exit"), this, SLOT(on_actionExit_triggered()));
++    close->setData(QString("exit"));
++    this->systemTray->setContextMenu(menu);
++    connect(this->systemTray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(systemTrayActivated(QSystemTrayIcon::ActivationReason)));
++
+     setWindowTitle(tr("WizNote"));
+ 
+     restoreStatus();
+@@ -137,6 +150,32 @@
+ #endif // Q_OS_MAC
+ }
+ 
++void MainWindow::systemTrayActivated(QSystemTrayIcon::ActivationReason activationReason)
++{
++    switch(activationReason)
++    {
++    case QSystemTrayIcon::Unknown:
++        break;
++    case QSystemTrayIcon::Context: //right click
++        break;
++    case QSystemTrayIcon::DoubleClick:
++        break;
++    case QSystemTrayIcon::Trigger: //left click
++        if (this->isVisible())
++            this->hide();
++        else
++        {
++            this->show();
++            this->setWindowState(this->windowState() & (~Qt::WindowMinimized | Qt::WindowActive));
++            this->setFocus();
++            this->activateWindow();
++        }
++        break;
++    case QSystemTrayIcon::MiddleClick:
++        break;
++    }
++}
++
+ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
+ {
+     // Qt issue: issue? User quit for mac dock send close event to qApp?
+@@ -171,6 +210,14 @@
+     m_sync->wait();
+ }
+ 
++void MainWindow::changeEvent(QEvent *event)
++{
++    if(event->type() == QEvent::WindowStateChange && this->isMinimized())
++    {
++        hide();
++    }
++}
++
+ void MainWindow::closeEvent(QCloseEvent* event)
+ {
+ #ifdef Q_OS_MAC
+@@ -181,8 +228,13 @@
+     ShowHideProcess(&pn,false);
+     event->ignore();
+ #else
+-    event->accept();
+-    qApp->quit();
++//   event->accept();
++//    qApp->quit();
++    if (this->isVisible())
++    {
++	hide();
++	event->ignore();
++    }
+ #endif
+ }
+ 
+diff -Naur WizQTClient-2.0.64.orig/src/wizmainwindow.h WizQTClient-2.0.64/src/wizmainwindow.h
+--- WizQTClient-2.0.64.orig/src/wizmainwindow.h	2014-03-11 15:34:37.829199401 +0800
++++ WizQTClient-2.0.64/src/wizmainwindow.h	2014-03-11 15:34:50.344199763 +0800
+@@ -66,6 +66,7 @@
+     bool isLogout() const { return m_bLogoutRestart; }
+ 
+ protected:
++    virtual void changeEvent(QEvent *event);
+     virtual bool eventFilter(QObject* watched, QEvent* event);
+     virtual void resizeEvent(QResizeEvent* event);
+     virtual void showEvent(QShowEvent* event);
+@@ -89,6 +90,7 @@
+     QToolBar* m_toolBar;
+     QMenuBar* m_menuBar;
+     CWizStatusBar* m_statusBar;
++    QSystemTrayIcon *systemTray;
+ 
+ #ifndef Q_OS_MAC
+     QLabel* m_labelNotice;
+@@ -170,6 +172,7 @@
+     void on_actionFeedback_triggered();
+     void on_actionSearch_triggered();
+     void on_actionResetSearch_triggered();
++    void systemTrayActivated(QSystemTrayIcon::ActivationReason);
+ 
+     // menu editing
+     void on_actionEditingUndo_triggered();

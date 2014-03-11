@@ -1,0 +1,19 @@
+diff -Naur WizQTClient-2.1.0-beta.orig/src/sync/asyncapi.cpp WizQTClient-2.1.0-beta/src/sync/asyncapi.cpp
+--- WizQTClient-2.1.0-beta.orig/src/sync/asyncapi.cpp	2013-12-24 18:51:16.000000000 +0800
++++ WizQTClient-2.1.0-beta/src/sync/asyncapi.cpp	2014-03-11 16:01:30.604246012 +0800
+@@ -1,6 +1,10 @@
+ #include "asyncapi.h"
+ 
++#ifdef BUILD_WITH_QT5
+ #include <QtConcurrent>
++#else
++#include <QtCore>
++#endif
+ #include <QNetworkAccessManager>
+ #include <QEventLoop>
+ 
+@@ -140,4 +144,3 @@
+ 
+     Q_EMIT getCommentsCountFinished(nTotalComments);
+ }
+-
